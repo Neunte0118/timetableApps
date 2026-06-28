@@ -1,0 +1,11 @@
+  .subject-setup { text-align: left;}
+  .subject-row { display: grid; grid-template-columns: 64px 1fr; gap: 10px; align-items: center; margin: 10px 0; }
+  .subject-code { font-weight: 700; white-space: nowrap; }
+  .subject-setup select { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-2-color); color: var(--text-strong-color); }
+  .subject-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
+  .subject-actions button { padding: 8px 12px; background: var(--surface-2-color); color: var(--text-strong-color); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; }
+  .subject-note { margin: 0 0 10px; opacity: 0.9; }
+  code { background: rgba(255,255,255,0.06); padding: 0 4px; border-radius: 4px; }
+  .subject-error { color: #ffb3b3; margin: 8px 0 0; }
+  body.theme-light .subject-error { color: #b00020; }
+  @media (max-width: 600px) { .subject-row { grid-template-columns: 56px 1fr; } }

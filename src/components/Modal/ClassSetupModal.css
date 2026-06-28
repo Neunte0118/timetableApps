@@ -1,0 +1,8 @@
+  .class-setup { text-align: left; }
+  .class-row { display: grid; grid-template-columns: 70px 1fr; gap: 10px; align-items: center; margin: 10px 0; }
+  .class-row label { font-weight: 700; }
+  .class-setup select { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-2-color); color: var(--text-strong-color); }
+  .class-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
+  .class-actions button { padding: 8px 12px; background: var(--surface-2-color); color: var(--text-strong-color); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; }
+  .class-error { color: #ffb3b3; margin: 8px 0 0; }
+  body.theme-light .class-error { color: #b00020; }

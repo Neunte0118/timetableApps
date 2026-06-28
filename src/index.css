@@ -1,0 +1,226 @@
+/* =========================================================
+   THEME VARIABLES
+========================================================= */
+:root.theme-dark {
+    --main-color: #230b57;
+    --accent-color: #fff;
+
+    --background-color: #000;
+    --surface-color: #1e1e1e;
+    --surface-2-color: #272727;
+    --surface-3-color: #151515;
+
+    --border-color: #333;
+    --border-strong-color: #777;
+
+    --text-color: #e0e0e0;
+    --text-strong-color: #ffffff;
+
+    --selectable-color: #cab8d9;
+
+    --button-color: #000;
+
+    --link-color: #00FFFF;
+
+    --today-color: #e4007f;
+    --saturday-color: #8c7ec4;
+    --holiday-color: #c17d93;
+    --filter-hit-color: #00FFFF;
+    --timetable-changed-color: #ee7800;
+}
+
+:root.theme-light {
+    --main-color: #230b57;
+    --accent-color: #fff;
+
+    --background-color: #fff;
+    --surface-color: #ffffff;
+    --surface-2-color: #192f60;
+    --surface-3-color: #192f60;
+
+    --border-color: #d0d0d5;
+    --border-strong-color: #b8b8c0;
+
+    --text-color: #2a2a2e;
+    --text-strong-color: #FFF;
+
+    --selectable-color: #c1ab05;
+
+    --button-color: #192f60;
+
+    --link-color: #3366ff;
+
+    --today-color: #e4007f;
+    --saturday-color: #58a0e4;
+    --holiday-color: #e25882;
+    --filter-hit-color: #006a6c;
+    --timetable-changed-color: #f8991c;
+}
+
+html {
+    height: 100dvh;
+}
+
+body {
+    height: 100%;
+    background: var(--background-color);
+    color: var(--text-color);
+    font-size: 12px;
+    min-height: 100%;
+    padding-bottom: env(safe-area-inset-bottom);
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+}
+
+#root {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+* {
+    font-family: "Noto Serif JP", "Hiragino Mincho ProN", serif;
+}
+
+select {
+    text-align: center;
+    background-color: var(--button-color);
+    color: var(--selectable-color);
+    border: 1.5px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+select::-webkit-scrollbar {
+    width: 0;
+}
+
+a {
+    color: var(--link-color);
+}
+
+.title {
+    font-size: 18px;
+    text-align: center;
+    margin: 6px;
+}
+
+@media (max-width: 650px) {
+    /* モバイルでも設定メニューは2列のまま */
+}
+
+button.external::after {
+    content: "↗";
+    margin-left: 2px;
+    font-size: 0.9em;
+}
+
+/* =========================================================
+   BLOCKED STATE
+========================================================= */
+body.blocked {
+    overflow: hidden;
+}
+
+.timetable-changed {
+    color: var(--timetable-changed-color);
+}
+
+/* =========================================================
+   RESPONSIVE WIDTH
+========================================================= */
+@media (max-width: 700px) {
+    * { font-size: 14px; }
+    .subject { font-size: 12px; }
+    #title { font-size: 14px; text-align: center; }
+
+    .timetable th:nth-child(n+6),
+    .timetable td:nth-child(n+6) {
+        display: none;
+    }
+
+    .other-table thead th:nth-child(1),
+    .other-table tbody th:nth-child(1) {
+        width: 40px;
+        height: 50px;
+        white-space: nowrap;
+    }
+}
+
+@media (min-width: 700px) and (max-width: 900px) {
+    * { font-size: 18px; }
+    .subject { font-size: 16px; }
+    #title { font-size: 24px; text-align: center; }
+
+    .timetable th:nth-child(n+8),
+    .timetable td:nth-child(n+8) {
+        display: none;
+    }
+
+    .other-table thead th:nth-child(1),
+    .other-table tbody th:nth-child(1) {
+        width: 80px;
+        height: 50px;
+        white-space: nowrap;
+    }
+}
+
+@media (min-width: 900px) and (max-width: 1300px) {
+    * { font-size: 20px; }
+    #title { font-size: 24px; text-align: center; }
+
+    .timetable th:nth-child(n+10),
+    .timetable td:nth-child(n+10) {
+        display: none;
+    }
+
+    .other-table thead th:nth-child(1),
+    .other-table tbody th:nth-child(1) {
+        width: 80px;
+        height: 50px;
+        white-space: nowrap;
+    }
+}
+
+@media (min-width: 1300px) and (max-width: 1500px) {
+    * { font-size: 20px; }
+    #title { font-size: 24px; text-align: center; }
+
+    .timetable th:nth-child(n+14),
+    .timetable td:nth-child(n+14) {
+        display: none;
+    }
+
+    .other-table thead th:nth-child(1),
+    .other-table tbody th:nth-child(1) {
+        width: 80px;
+        height: 50px;
+        white-space: nowrap;
+    }
+}
+
+@media (min-width: 1500px) {
+    * { font-size: 20px; }
+    #title { font-size: 24px; text-align: center; }
+
+    .timetable th:nth-child(n+18),
+    .timetable td:nth-child(n+18) {
+        display: none;
+    }
+
+    .other-table thead th:nth-child(1),
+    .other-table tbody th:nth-child(1) {
+        width: 80px;
+        height: 50px;
+        white-space: nowrap;
+    }
+}
+
+.timetable th[style*="display: none"],
+.timetable td[style*="display: none"] {
+    pointer-events: none;
+}

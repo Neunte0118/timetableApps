@@ -1,0 +1,77 @@
+.nav-bar {
+    width: 90%;
+    margin: 8px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+
+.nav-bar-1,
+.nav-bar-2 {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.date-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    min-width: 0;
+}
+
+.nav-bar button,
+.month-select,
+.day-select {
+    height: 44px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.nav-bar button {
+    min-width: 0;
+    padding: 10px 12px;
+    background: var(--button-color);
+    color: var(--text-strong-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.nav-bar button:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.prev-btn, .next-btn {
+    display: inline-block;
+}
+
+
+.month-select,
+.day-select {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+    height: 44px;
+    box-sizing: border-box;
+
+    text-align: center;
+    padding: 10px 12px;
+    font-size: 14px;
+
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+
+    background-color: var(--button-color);
+    color: var(--selectable-color);
+
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+}

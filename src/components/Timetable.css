@@ -1,0 +1,153 @@
+/* =========================================================
+   TIMETABLE BASE
+========================================================= */
+
+.timetable {
+    flex: 2 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.timetable table {
+    flex: 1;
+    width: 90%;
+    margin: 8px auto;
+
+    border-collapse: collapse;
+    table-layout: fixed;
+
+    background: var(--surface-color);
+    border-radius: 10px;
+    overflow: hidden;
+
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+}
+
+.timetable table {
+    flex: 1 1 auto;
+}
+
+.timetable-2 {
+    display: none;
+}
+
+/* JSで縦サイズに応じて付与 */
+body.use-split .timetable-2 {
+    display: table;
+}
+
+/* 2段表示時はメインは4日分に固定 */
+body.use-split .timetable-1 th:nth-child(n+6),
+body.use-split .timetable-1 td:nth-child(n+6) {
+    display: none;
+}
+
+.nav-bar {
+    flex: 0 0 auto;
+}
+
+/* =========================================================
+   TABLE HEADER
+========================================================= */
+
+.timetable thead {
+    background: var(--surface-3-color);
+}
+
+.timetable thead th {
+    color: var(--accent-color);
+    border-bottom: 2px solid var(--border-strong-color);
+}
+
+/* 今日 / 土曜 / 休日 */
+.timetable thead th.today {
+    background: var(--today-color);
+    color: var(--text-strong-color);
+}
+
+.timetable thead th.saturday {
+    color: var(--saturday-color);
+}
+
+.timetable thead th.holiday {
+    color: var(--holiday-color);
+}
+
+/* =========================================================
+   TABLE BODY
+========================================================= */
+
+.timetable tbody th {
+    background-color: var(--surface-3-color);
+}
+
+.timetable th,
+.timetable td {
+    padding: 2px 0;
+    text-align: center;
+
+    border-right: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-color);
+}
+
+.timetable th {
+    font-weight: 600;
+    color: var(--text-strong-color);
+}
+
+.timetable tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* =========================================================
+   FILTER
+========================================================= */
+
+.timetable td.filter-dim {
+    opacity: 0.18;
+}
+
+.timetable td.filter-hit {
+    color: var(--filter-hit-color);
+    font-weight: 700;
+}
+
+/* =========================================================
+   INTERACTION
+========================================================= */
+
+.timetable td,
+.timetable .date-cell,
+.selected,
+.timetable .date-selected,
+.timetable .subject-selected {
+    transition: 0.2s;
+}
+
+.timetable td,
+.timetable .date-cell,
+.timetable .toggle-header {
+    cursor: pointer;
+}
+
+.timetable .toggle-header {
+    background-color: var(--surface-color);
+    color: var(--text-color);
+}
+
+.selected,
+.timetable .date-selected {
+    background-color: rgba(0, 161, 233, 0.3);
+    box-shadow: 0 0 10px #00a1e9;
+}
+
+/* 選択中でも今日色を保持 */
+.timetable thead th.today.date-selected {
+    background: var(--today-color);
+    background-color: var(--today-color);
+}
+
+.timetable .subject-selected {
+    background: rgba(255, 255, 255, 0.05);
+}
