@@ -20,13 +20,6 @@ export default function useAdaptiveTimetable(
     subjectRoomsMap: SubjectRoomMap[],
     tableMode: tableModeType,
 ): AdaptiveTimetable {
-    useEffect(() => {
-        console.log("teacherMap", teacherMap);
-        console.log("timetable", timetable);
-        console.log("expansionMap", expansionMap);
-        console.log("subjectRoomsMap", subjectRoomsMap);
-    }), [];
-    
     return useMemo(() => {
         if (!timetable || !expansionMap) {
             return timetable || {};

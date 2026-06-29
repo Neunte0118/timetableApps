@@ -56,7 +56,6 @@ export default function ExamTable({theme, isTermAccepted, classNumber, subjectCh
       .map((v) => subjectsChoicesMap[v] ?? v)
   );
   
-  console.log(subjectChoicesSet)
 
   useEffect(() => {
     const load = async () => {
@@ -84,7 +83,6 @@ export default function ExamTable({theme, isTermAccepted, classNumber, subjectCh
     })
   );
 
-  console.log(subjectsList)
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(JSON.stringify(examData));

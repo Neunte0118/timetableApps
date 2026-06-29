@@ -105,11 +105,6 @@ export default function Timetable({
                 "バスケ": "未定義",
             },
         }
-        console.log("PE lookup", {
-            originalCode,
-            subjectName,
-            keys: Object.keys(PETeachers[originalCode as PEKey] ?? {})
-        });
 
         if (isPEKey(originalCode)) {
             return PETeachers[originalCode]?.[subjectName];
@@ -153,7 +148,6 @@ export default function Timetable({
 
     const table1Offsets = buildOffsets(0, daysPerRow);
     const table2Offsets = buildOffsets(daysPerRow, daysPerRow);
-    console.log(table1Offsets);
 
     const today = new Date();
     const isToday = (date: Date) =>
@@ -171,7 +165,6 @@ export default function Timetable({
         );
     };
 
-    console.log(timetableData);
 
     const renderTable = (tableClassName: string, offsets: number[]) => {
         const hasSixthPeriod = offsets.some((offset) => {

@@ -142,6 +142,28 @@ type TimetableOverrideRow = {
         load();
     }, []);
 
+    const [updateChecked, setUpdateChecked] = useState(false);
+
+    useEffect(() => {
+        if (updateChecked) return;
+        if (!UpdateData?.length) return;
+
+        const latestVersion = UpdateData[0].versions;
+        const lastSeen = getStorage<string>("lastSeenVersion");
+
+        if (
+            typeof latestVersion === "string" &&
+            latestVersion !== lastSeen
+        ) {
+            setQueue(q => {
+                if (q.includes("updateInfo")) return q;
+                return [...q, "updateInfo"];
+            });
+        }
+
+        setUpdateChecked(true);
+    }, [UpdateData]);
+
     useEffect(() => {
         document.body.classList.toggle("use-split", isSplit);
     }, [isSplit]);
@@ -214,7 +236,6 @@ type TimetableOverrideRow = {
         const storage = {
             classnum: getStorage<number>("classNumber"),
             selectedSubjects: getStorage<Record<string, string>>("subjectChoices"),
-            lastSeen: getStorage<string>("lastSeenVersion"),
         };
 
         if (!isTermAccepted) nextQueue.push("term");
@@ -240,13 +261,6 @@ type TimetableOverrideRow = {
         }
         */
 
-        // version チェック
-        if (storage.lastSeen !== VERSION) {
-            //setStorage("lastSeenVersion", VERSION);
-            setShowUpdateList(false);
-            nextQueue.push("updateInfo");
-        }
-
         setQueue(nextQueue);
     }, []);
 
@@ -257,7 +271,7 @@ type TimetableOverrideRow = {
             ))
         )
     ].sort();
-    
+
     useEffect(() => {
         const CACHE_KEY = "overrides";
 
@@ -295,8 +309,7 @@ type TimetableOverrideRow = {
 
         loadOverrides();
     }, []);
-
-    
+console.log(JSON.stringify(UpdateData?.[0], null, 2));
     return (
         <>
             <h1 className="title">時間割アプリ</h1>
@@ -379,7 +392,12 @@ type TimetableOverrideRow = {
             <UpdateInfoModal
                 open={current === "updateInfo"}
                 onClose={() => {
-                    setStorage("lastSeenVersion", VERSION);
+                    const latestVersion = UpdateData?.[0]?.versions;
+
+                    if (typeof latestVersion === "string") {
+                        setStorage("lastSeenVersion", latestVersion);
+                    }
+
                     setCurrent(null);
                 }}
                 isList={showUpdateList}
