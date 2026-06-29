@@ -151,8 +151,9 @@ export default function Timetable({
     const buildOffsets = (start: number, length: number) =>
         [...Array(length)].map((_, i) => start + i);
 
-    const table1Offsets = isSplit ? buildOffsets(0, 4) : buildOffsets(0, daysPerRow);
-    const table2Offsets = buildOffsets(4, daysPerRow);
+    const table1Offsets = buildOffsets(0, daysPerRow);
+    const table2Offsets = buildOffsets(daysPerRow, daysPerRow);
+    console.log(table1Offsets);
 
     const today = new Date();
     const isToday = (date: Date) =>
@@ -170,7 +171,29 @@ export default function Timetable({
         );
     };
 
+    console.log(timetableData);
+
     const renderTable = (tableClassName: string, offsets: number[]) => {
+        const hasSixthPeriod = offsets.some((offset) => {
+            const dateKey = formatMonthDayJa(addDays(baseDay, offset));
+
+            const hasTimetable6 = (timetableData?.[dateKey]?.length ?? 0) >= 6;
+
+            const hasOverride6 =
+                overrides?.some(
+                    (o) =>
+                        o.dates === dateKey &&
+                        (o.classes === "0" || Number(o.classes) === classNumber) &&
+                        Number(o.periods) === 6
+                ) ?? false;
+
+            return hasTimetable6 || hasOverride6;
+        });
+
+        const periods = hasSixthPeriod
+            ? [1, 2, 3, 4, 5, 6]
+            : [1, 2, 3, 4, 5];
+
         return (
             <table className={tableClassName}>
                 <thead>
@@ -207,7 +230,7 @@ export default function Timetable({
                     </tr>
                 </thead>
                 <tbody>
-                    {[1, 2, 3, 4, 5].map((period) => (
+                    {periods.map((period) => (
                         <tr key={period}>
                             <th>{period}限</th>
                             {offsets.map((offset) => {
@@ -216,6 +239,11 @@ export default function Timetable({
                                 const raw = timetableData?.[dateKey]?.[period - 1] ?? "";
 
                                 const override = findOverride(dateKey, period);
+
+                                const hasSixthPeriod = Object.values(timetableData ?? {}).some(
+                                    (day) => day?.[5]
+                                );
+                                
                                 const isChanged = Boolean(override);
 
                                 let display: string;

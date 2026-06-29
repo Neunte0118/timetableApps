@@ -8,6 +8,7 @@ import {
     getData,
     deleteData,
 } from "../utils/indexedDB";
+import { getStorage, setStorage } from "@/utils/storage";
 import { formatMonthDayJa, formatMonthDaySlash } from "../utils/date";
 
 type ExtraEventRow = {
@@ -105,17 +106,34 @@ export default function EventMemoBox({
 
     // CSV取得
     useEffect(() => {
-        fetchCSV(EXTRA_EVENT_URL)
-            .then((rows) => {
-                setExtraEvents(rows as ExtraEventRow[]);
+        const CACHE_KEY = "extraEvents";
+
+        const load = async () => {
+            // キャッシュを先に表示
+            const cached = getStorage<ExtraEventRow[]>(CACHE_KEY);
+            if (cached) {
+                setExtraEvents(cached);
                 setExtraError(null);
-            })
-            .catch(() => {
-                setExtraEvents([]);
-                setExtraError(
-                    "追加行事の読み込みに失敗しました"
-                );
-            });
+            }
+
+            try {
+                const data = await fetchCSV(EXTRA_EVENT_URL) as ExtraEventRow[];
+
+                setExtraEvents(data);
+                setExtraError(null);
+                setStorage(CACHE_KEY, data);
+            } catch {
+                console.error("追加行事の読み込みに失敗しました");
+
+                // キャッシュが無い場合だけエラー表示
+                if (!cached) {
+                    setExtraEvents([]);
+                    setExtraError("追加行事の読み込みに失敗しました");
+                }
+            }
+        };
+
+        load();
     }, []);
 
     const eventLines = useMemo(() => {

@@ -9,6 +9,7 @@ type ExamRow = {
   examName: string;
   dates: string;
   displayDates: string;
+  periods: number;
   subjects: string;
   range: string;
   assignments: string;
@@ -22,12 +23,13 @@ type ExamItem = {
   subjects: string;
   range: string;
   assignments: string;
+  periods: number;
 };
 
 /**
  * 最終構造
  */
-export type ExamTable = Record<
+export type ExamDataType = Record<
   string,
   {
     examName: string;
@@ -35,7 +37,7 @@ export type ExamTable = Record<
   }
 >;
 
-export async function loadExamTable(url: string): Promise<ExamTable> {
+export async function loadExamTable(url: string): Promise<ExamDataType> {
   const rows = await fetchExamCSV(url);
   return buildExamTable(rows);
 }
@@ -61,9 +63,9 @@ async function fetchExamCSV(url: string): Promise<ExamRow[]> {
   return result.data;
 }
 
-function buildExamTable(rows: ExamRow[]): ExamTable {
-  return rows.reduce<ExamTable>((acc, row) => {
-    const { key, examName, displayDates, dates, subjects, range, assignments } = row;
+function buildExamTable(rows: ExamRow[]): ExamDataType {
+  return rows.reduce<ExamDataType>((acc, row) => {
+    const { key, examName, displayDates, dates, periods, subjects, range, assignments } = row;
 
     if (!acc[key]) {
       acc[key] = {
@@ -81,7 +83,12 @@ function buildExamTable(rows: ExamRow[]): ExamTable {
       subjects,
       range,
       assignments,
+      periods: Number(periods),
     });
+
+    acc[key].dates[displayDates].sort(
+      (a, b) => a.periods - b.periods
+    );
 
     return acc;
   }, {});

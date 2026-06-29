@@ -71,14 +71,12 @@ export default function HomePage({
     const dayKeySlash = useMemo(() => formatMonthDaySlash(day), [day])
 
     const {timetables, loadTimetable} = useTimetables();
-    const modeList = ["subjects", "rooms", "teachers"] as const;
-
     const [tableMode, setTableMode] = useState<"subjects" | "rooms" | "teachers">("subjects");
     
     const toggleTableMode = () => {
         setTableMode((prev) => {
             if (prev === "subjects") return "rooms";
-            if (prev === "rooms") return "teachers";
+            //if (prev === "rooms") return "teachers";
             return "subjects";
         });
     };
@@ -120,11 +118,25 @@ type TimetableOverrideRow = {
     }, []);
 
     useEffect(() => {
+        const CACHE_KEY = "updateData";
+
         const load = async () => {
+            // キャッシュを先に表示
+            const cached = getStorage<NestedRecord[]>(CACHE_KEY);
+            if (cached) {
+                setUpdateData(cached);
+            }
+
             try {
-                const UPDATE_DATA = await fetchCSV("https://docs.google.com/spreadsheets/d/e/2PACX-1vQSizltFHoOWYdi97m2q_x21-XHwaeeMTzbUk0jlWCZRAD-CmsGn9uKZQMe2rHbIxP7_pEekWK84yf9/pub?gid=2144261983&single=true&output=csv");
-                setUpdateData(UPDATE_DATA);
-            } catch (error) { console.error(error) };
+                const updateData = await fetchCSV(
+                    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSizltFHoOWYdi97m2q_x21-XHwaeeMTzbUk0jlWCZRAD-CmsGn9uKZQMe2rHbIxP7_pEekWK84yf9/pub?gid=2144261983&single=true&output=csv"
+                );
+
+                setUpdateData(updateData);
+                setStorage(CACHE_KEY, updateData);
+            } catch (error) {
+                console.error(error);
+            }
         };
 
         load();
@@ -245,38 +257,39 @@ type TimetableOverrideRow = {
             ))
         )
     ].sort();
-
+    
     useEffect(() => {
+        const CACHE_KEY = "overrides";
+
+        const parseOverrides = (data: NestedRecord[]): TimetableOverrideRow[] =>
+            data.map((row) => ({
+                dates: typeof row.dates === "string" ? row.dates : "",
+                classes: typeof row.classes === "string" ? row.classes : "",
+                periods: typeof row.periods === "string" ? row.periods : "",
+                subjects: typeof row.subjects === "string" ? row.subjects : "",
+            }));
+
         const loadOverrides = async () => {
+            // キャッシュを先に表示
+            const cached = getStorage<NestedRecord[]>(CACHE_KEY);
+            if (cached) {
+                setOverrides(parseOverrides(cached));
+            }
+
             try {
-                const data = await fetchCSV("https://docs.google.com/spreadsheets/d/e/2PACX-1vQiStJCsPKp1ndi958BLOajBqizE_aIcO2Z0f9hPgiyPV19rnWB3qVcrLuVEaeCeE5ddaIudtX7VkzE/pub?gid=1149682638&single=true&output=csv");
+                const data = await fetchCSV(
+                    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQiStJCsPKp1ndi958BLOajBqizE_aIcO2Z0f9hPgiyPV19rnWB3qVcrLuVEaeCeE5ddaIudtX7VkzE/pub?gid=1149682638&single=true&output=csv"
+                );
 
-                const parsed: TimetableOverrideRow[] = data.map((row) => ({
-                    dates:
-                        typeof row.dates === "string"
-                            ? row.dates
-                            : "",
-
-                    classes:
-                        typeof row.classes === "string"
-                            ? row.classes
-                            : "",
-
-                    periods:
-                        typeof row.periods === "string"
-                            ? row.periods
-                            : "",
-
-                    subjects:
-                        typeof row.subjects === "string"
-                            ? row.subjects
-                            : "",
-                }));
-
-                setOverrides(parsed);
+                setOverrides(parseOverrides(data));
+                setStorage(CACHE_KEY, data);
             } catch (e) {
                 console.error("override読み込み失敗", e);
-                setOverrides([]);
+
+                // キャッシュも無い場合だけ空にする
+                if (!getStorage<NestedRecord[]>(CACHE_KEY)) {
+                    setOverrides([]);
+                }
             }
         };
 

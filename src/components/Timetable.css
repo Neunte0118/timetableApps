@@ -37,12 +37,6 @@ body.use-split .timetable-2 {
     display: table;
 }
 
-/* 2段表示時はメインは4日分に固定 */
-body.use-split .timetable-1 th:nth-child(n+6),
-body.use-split .timetable-1 td:nth-child(n+6) {
-    display: none;
-}
-
 .nav-bar {
     flex: 0 0 auto;
 }
