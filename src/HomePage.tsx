@@ -309,7 +309,7 @@ type TimetableOverrideRow = {
 
         loadOverrides();
     }, []);
-console.log(JSON.stringify(UpdateData?.[0], null, 2));
+    
     return (
         <>
             <h1 className="title">時間割アプリ</h1>

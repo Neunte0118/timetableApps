@@ -230,24 +230,19 @@ export default function Timetable({
                                 const date = addDays(baseDay, offset);
                                 const dateKey = formatMonthDayJa(date);
                                 const raw = timetableData?.[dateKey]?.[period - 1] ?? "";
-
                                 const override = findOverride(dateKey, period);
+
+                                const code = override?.subjects ?? raw;
+                                const resolved = resolveCell(code);
+
+                                const display = resolved.display;
+                                const subjectName = resolved.subjectName;
+
+                                const isChanged = Boolean(override);
 
                                 const hasSixthPeriod = Object.values(timetableData ?? {}).some(
                                     (day) => day?.[5]
                                 );
-                                
-                                const isChanged = Boolean(override);
-
-                                let display: string;
-                                let subjectName: string;
-
-                                if (override && tableMode === "subjects") {
-                                    display = override.subjects;
-                                    subjectName = override.subjects;
-                                } else {
-                                    ({ display, subjectName } = resolveCell(raw));
-                                }
 
                                 const isSelected = offset === selectedOffset;
                                 const hasFilter = Boolean(filterSubject);

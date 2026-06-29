@@ -216,6 +216,7 @@ export default function EventMemoBox({
                     setMemo(e.target.value)
                 }
                 placeholder="メモを入力…"
+                style={{ resize: "none"}}
             />
         </div>
     );
