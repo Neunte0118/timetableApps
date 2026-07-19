@@ -1,9 +1,6 @@
 import { useCachedCSV } from "./useCachedCSV";
 import type { NestedRecord, SubjectsData } from "../types/type";
-
-// ← 実際に公開したスプレッドシートのCSV公開URLに差し替えてください
-const SUBJECTS_ROOMS_MAP_URL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSizltFHoOWYdi97m2q_x21-XHwaeeMTzbUk0jlWCZRAD-CmsGn9uKZQMe2rHbIxP7_pEekWK84yf9/pub?gid=1007938727&single=true&output=csv";
+import { SUBJECTS_ROOMS_MAP_URL } from "@/config/url";
 
 function parseRows(rows: NestedRecord[]): SubjectsData {
     const expansionMap: Record<string, string[]> = {};

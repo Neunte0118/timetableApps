@@ -31,12 +31,7 @@ import { useResolvedTimetables } from "./hooks/useResolvedTimetables";
 import { useCachedCSV } from "./hooks/useCachedCSV";
 
 import type { NestedRecord, TimetableOverrideRow, UpdateInfoRow, tableModeType } from "./types/type";
-
-const UPDATE_INFO_URL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSizltFHoOWYdi97m2q_x21-XHwaeeMTzbUk0jlWCZRAD-CmsGn9uKZQMe2rHbIxP7_pEekWK84yf9/pub?gid=2144261983&single=true&output=csv";
-
-const OVERRIDES_URL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQiStJCsPKp1ndi958BLOajBqizE_aIcO2Z0f9hPgiyPV19rnWB3qVcrLuVEaeCeE5ddaIudtX7VkzE/pub?gid=1149682638&single=true&output=csv";
+import { UPDATE_INFO_URL, OVERRIDES_URL } from "./config/url";
 
 function parseUpdateInfoRows(rows: NestedRecord[]): UpdateInfoRow[] {
     return rows.map((row) => ({

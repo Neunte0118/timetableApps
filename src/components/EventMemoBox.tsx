@@ -6,9 +6,7 @@ import { formatMonthDayJa, formatMonthDaySlash } from "../utils/date";
 import { useCachedCSV } from "../hooks/useCachedCSV";
 import { escapeHtmlWithoutWhiteList } from "../utils/escapeHtml";
 import type { NestedRecord } from "../types/type";
-
-const EXTRA_EVENT_URL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vR1dN6poNIpBsmis-JO2N2Hjiu96bkMuqs2fDtf1V3FH6iBs3BuQZVskaDq8n-xhoKEMdGYD-P5LscW/pub?gid=0&single=true&output=csv";
+import { EXTRA_EVENT_URL } from "@/config/url";
 
 // CSSカラー値として許容する形式のみを通す（style属性へのインジェクション対策）
 const SAFE_COLOR_PATTERN = /^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|rgba?\([\d.,%\s]+\))$/;

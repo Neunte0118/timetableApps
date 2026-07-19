@@ -1,9 +1,6 @@
 import { useCachedCSV } from "./useCachedCSV";
 import type { NestedRecord } from "../types/type";
-
-// ← 実際に公開したスプレッドシートのCSV公開URLに差し替えてください
-const EVENTS_URL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSizltFHoOWYdi97m2q_x21-XHwaeeMTzbUk0jlWCZRAD-CmsGn9uKZQMe2rHbIxP7_pEekWK84yf9/pub?gid=1047451506&single=true&output=csv";
+import { EVENTS_URL } from "@/config/url";
 
 function parseRows(rows: NestedRecord[]): Record<string, string> {
     const result: Record<string, string> = {};

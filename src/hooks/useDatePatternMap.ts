@@ -1,9 +1,6 @@
 import { useCachedCSV } from "./useCachedCSV";
 import type { NestedRecord } from "../types/type";
-
-// ← 実際に公開したスプレッドシートのCSV公開URLに差し替えてください
-const DATE_PATTERN_MAP_URL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSizltFHoOWYdi97m2q_x21-XHwaeeMTzbUk0jlWCZRAD-CmsGn9uKZQMe2rHbIxP7_pEekWK84yf9/pub?gid=598100052&single=true&output=csv";
+import { DATE_PATTERN_MAP_URL } from "@/config/url";
 
 const PERIOD_COLUMNS = [
     "first_period",

@@ -1,5 +1,6 @@
 import Modal from "../Modal";
 import type { ModalType } from "../../types/type";
+import { ISSUE_REPORT_URL, TIMETABLE_CHANGE_REPORT_URL } from "@/config/url";
 
 type Props = ModalType & {
     onOpen: (modalType: string) => void;
@@ -25,10 +26,10 @@ export default function SettingModal({ open, onClose, onOpen }: Props) {
                 <button type="button" onClick={() => openAndClose("help")}>
                     ヘルプ
                 </button>
-                <button type="button" onClick={() => window.open("https://forms.gle/KiiEAds2vtjAmsZ97", "_blank", "noopener,noreferrer")}>
+                <button type="button" onClick={() => window.open(ISSUE_REPORT_URL, "_blank", "noopener,noreferrer")}>
                     不具合の報告↗
                 </button>
-                <button type="button" onClick={() => window.open("https://docs.google.com/forms/d/e/1FAIpQLSfTOKMLJz896qfq7OKSv7TRwxxJxX4VIqXT4npLcGmqWNyBkg/viewform?usp=preview", "_blank", "noopener,noreferrer")}>
+                <button type="button" onClick={() => window.open(TIMETABLE_CHANGE_REPORT_URL, "_blank", "noopener,noreferrer")}>
                     時間割変更↗
                 </button>
                 <button type="button" onClick={() => openAndClose("term")}>
