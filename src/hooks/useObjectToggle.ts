@@ -1,10 +1,10 @@
 import { useState } from "react";
 
-export function useObjectToggle<T extends Record<string, any>>(initial: T) {
-    const [state, setState] = useState(initial);
+export function useObjectToggle<T extends Record<string, unknown>>(initial: T) {
+    const [state, setState] = useState<T>(initial);
 
     const toggleKey = (key: keyof T) => {
-        setState(prev => {
+        setState((prev) => {
             const value = prev[key];
 
             if (typeof value === "boolean") {

@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { fetchJSON } from "../services/fetchJSON";
+import { logger } from "../utils/logger";
+import type { TeacherMap } from "../types/type";
 
+const log = logger.scope("useStaticData");
 const base = import.meta.env.BASE_URL;
 
 type StaticData = {
-    teacherMap: any;
+    teacherMap: TeacherMap | null;
     loading: boolean;
     error: string | null;
 };
@@ -17,13 +20,15 @@ export function useStaticData() {
     });
 
     useEffect(() => {
+        let cancelled = false;
+
         const load = async () => {
             try {
-                const [
-                    teacherMap,
-                ] = await Promise.all([
-                    fetchJSON(`${base}/data/teacher.json`),
+                const [teacherMap] = await Promise.all([
+                    fetchJSON<TeacherMap>(`${base}/data/teacher.json`),
                 ]);
+
+                if (cancelled) return;
 
                 setState({
                     teacherMap,
@@ -31,9 +36,11 @@ export function useStaticData() {
                     error: null,
                 });
             } catch (e) {
-                console.error(e);
+                log.error("teacher.json の読み込みに失敗しました", e);
 
-                setState(prev => ({
+                if (cancelled) return;
+
+                setState((prev) => ({
                     ...prev,
                     loading: false,
                     error: String(e),
@@ -42,6 +49,10 @@ export function useStaticData() {
         };
 
         load();
+
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     return state;

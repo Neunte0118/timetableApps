@@ -26,6 +26,6 @@
       "@utils/*": ["src/utils/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "vite.pwa.ts"],
   "exclude": ["node_modules"]
 }

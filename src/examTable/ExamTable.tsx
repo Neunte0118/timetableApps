@@ -1,24 +1,23 @@
 import { useParams } from "react-router-dom";
-import { loadExamTable } from "@/hooks/useExamData";
-import type { ExamDataType } from "@/hooks/useExamData";
+import { loadExamTable } from "../hooks/useExamData";
+import type { ExamDataType } from "../hooks/useExamData";
 import { useEffect, useState } from "react";
+import { logger } from "../utils/logger";
 
-type Props ={
-  theme: "light" | "dark";
-  isTermAccepted: boolean;
-  classNumber: number | null;
-  subjectChoices: Record<string, string> | null;
-}
+const log = logger.scope("ExamTable");
 
-const EXAM_DATA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQy3XEeDOJ5hTIHZN8dhXqzpiWdsqpYWnZPhO4fGPe28VarMzeU8ikVIPFGJBn_m5REbH7eE83yM77O/pub?gid=139648733&single=true&output=csv";
+type Props = {
+    theme: "light" | "dark";
+    isTermAccepted: boolean;
+    classNumber: number | null;
+    subjectChoices: Record<string, string> | null;
+};
 
-export default function ExamTable({theme, isTermAccepted, classNumber, subjectChoices,}: Props) {
-  const { examTableId } = useParams<string>();
-  const [examData, setExamData] = useState<ExamDataType>();
-  const [examName, setExamName] = useState<string>();
-  const [selectedDate, setSelectedDate] = useState<string[]>();
-  
-  const subjectsChoicesMap: Record<string, string> = {
+const EXAM_DATA_URL =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQy3XEeDOJ5hTIHZN8dhXqzpiWdsqpYWnZPhO4fGPe28VarMzeU8ikVIPFGJBn_m5REbH7eE83yM77O/pub?gid=139648733&single=true&output=csv";
+
+// 選択科目コード（略称/連番付き）を試験科目名の正式表記に正規化するための対応表
+const SUBJECT_NAME_ALIASES: Record<string, string> = {
     "古探": "古典探究",
     "古講": "古典講読",
     "現世読": "現代世界を読む",
@@ -40,7 +39,6 @@ export default function ExamTable({theme, isTermAccepted, classNumber, subjectCh
     "倫政講": "倫政講究",
     "倫政特": "倫政特講",
 
-
     "化S": "化学S",
     "物S": "物理S",
     "生S": "生物S",
@@ -48,86 +46,119 @@ export default function ExamTable({theme, isTermAccepted, classNumber, subjectCh
     "物L": "物理L",
     "生L": "生物L",
     "地L": "地学L",
-  };
+};
 
-  const subjectChoicesSet = new Set(
-    Object.values(subjectChoices ?? {})
-      .map((v) => v.replace(/[①②③④⑤⑥⑦⑧⑨⑩]+$/, ""))  
-      .map((v) => subjectsChoicesMap[v] ?? v)
-  );
-  
+// 丸数字（履修順を示す接尾辞）を除去する
+const CIRCLED_NUMBER_SUFFIX = /[①②③④⑤⑥⑦⑧⑨⑩]+$/;
 
-  useEffect(() => {
-    const load = async () => {
-      const data: any = await loadExamTable(EXAM_DATA);
-      const result = data[examTableId ?? ""];
-      setExamData(result);
-      setExamName(result.examName);
+export default function ExamTable({ isTermAccepted, subjectChoices }: Props) {
+    const { examTableId } = useParams<{ examTableId: string }>();
+    const [examData, setExamData] = useState<ExamDataType[string]>();
+    const [notFound, setNotFound] = useState(false);
+    const [selectedDateSubjects, setSelectedDateSubjects] = useState<string[]>();
+    const [copied, setCopied] = useState(false);
+
+    const subjectChoicesSet = new Set(
+        Object.values(subjectChoices ?? {})
+            .map((v) => v.replace(CIRCLED_NUMBER_SUFFIX, ""))
+            .map((v) => SUBJECT_NAME_ALIASES[v] ?? v)
+    );
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const load = async () => {
+            try {
+                const data = await loadExamTable(EXAM_DATA_URL);
+                if (cancelled) return;
+
+                const result = data[examTableId ?? ""];
+
+                if (!result) {
+                    setNotFound(true);
+                    setExamData(undefined);
+                    return;
+                }
+
+                setNotFound(false);
+                setExamData(result);
+            } catch (e) {
+                log.error("試験時間割の読み込みに失敗しました", e);
+                if (!cancelled) setNotFound(true);
+            }
+        };
+
+        load();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [examTableId]);
+
+    const datesList = Object.keys(examData?.dates ?? {}).sort();
+
+    const subjectsByDate: Record<string, string[]> = Object.fromEntries(
+        Object.entries(examData?.dates ?? {}).map(([date, items]) => {
+            const list = Array.isArray(items) ? items : [];
+
+            return [
+                date,
+                list
+                    .map((item) => item.subjects)
+                    .filter((subject) => subjectChoicesSet.has(subject)),
+            ];
+        })
+    );
+
+    const handleCopy = async () => {
+        if (!examData) return;
+
+        try {
+            await navigator.clipboard.writeText(JSON.stringify(examData));
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 1500);
+        } catch (e) {
+            log.error("クリップボードへのコピーに失敗しました", e);
+        }
     };
 
-    load();
-  }, [examTableId]);
-  
-  const datesList = Object.keys(examData?.dates ?? {}).sort();
-  
-  const subjectsList: Record<string, string[]> = Object.fromEntries(
-    Object.entries(examData?.dates ?? {}).map(([date, items]) => {
-      const list = Array.isArray(items) ? items : [];
+    const viewSubjects = (date: string) => {
+        setSelectedDateSubjects(subjectsByDate[date]);
+    };
 
-      return [
-        date,
-        list
-          .map((item) => item.subjects)
-          .filter((subject) => subjectChoicesSet.has(subject)),
-      ];
-    })
-  );
+    if (!isTermAccepted) return null;
 
+    if (notFound) {
+        return <div className="exam-not-found">試験時間割が見つかりませんでした。</div>;
+    }
 
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(JSON.stringify(examData));
-  };
+    return (
+        <div>
+            <div className="info">
+                <div className="examName" style={{ textAlign: "center", fontSize: "1.45rem" }}>
+                    {examData?.examName}
+                </div>
+            </div>
 
-  const viewSubjects = (v: string) => {
-    setSelectedDate(subjectsList[v]);
-  }
+            <div className="DatesButton">
+                {datesList.map((date) => (
+                    <button key={date} type="button" onClick={() => viewSubjects(date)}>
+                        {date}
+                    </button>
+                ))}
+            </div>
 
-  if (!isTermAccepted) return;
+            <div className="subjectsField">
+                {selectedDateSubjects?.map((subject, i) => (
+                    <button key={`${subject}-${i}`} type="button" disabled>
+                        {subject}
+                    </button>
+                ))}
+            </div>
 
-  return (
-    <div>
-      <div className="info">
-        <div 
-          className="examName"
-          style={{ textAlign: "center", fontSize: "1.45rem"}}
-        >
-          {examName}
-        </div>        
-      </div>
-
-      <div className="DatesButton">
-        {datesList.map((v) => (
-          <button
-            value={v}
-            onClick={() => viewSubjects(v)}
-          >
-            {v}
-          </button>
-        ))}
-      </div>
-
-      <div className="subjectsField">
-        {selectedDate?.map((v) => (
-          <button
-            value={v}
-
-          >
-            {v}
-          </button>
-        ))}
-      </div>
-
-      <button onClick={handleCopy}>copy</button>
-    </div>
-  )
+            <button type="button" onClick={handleCopy}>
+                {copied ? "コピーしました" : "copy"}
+            </button>
+        </div>
+    );
 }

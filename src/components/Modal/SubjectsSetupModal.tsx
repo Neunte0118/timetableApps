@@ -1,9 +1,9 @@
 import Modal from "../Modal";
-import type { ModalType } from "../../types/type";
-import "./SubjectsSetupModal.css"
+import type { ModalType, ExpansionMap } from "../../types/type";
+import "./SubjectsSetupModal.css";
 
 type Props = ModalType & {
-    expansionMap: Record<string, string[]>; // ← 選択肢の配列に修正
+    expansionMap: ExpansionMap;
     expansionClassMap: string[];
     subjectChoices: Record<string, string>;
     setSubjectChoices: (v: Record<string, string>) => void;
@@ -17,7 +17,6 @@ export default function SubjectsSetupModal({
     subjectChoices,
     setSubjectChoices,
 }: Props) {
-
     const handleChange = (key: string, value: string) => {
         setSubjectChoices({
             ...subjectChoices,
@@ -27,11 +26,18 @@ export default function SubjectsSetupModal({
 
     const expansionKeys = Object.keys(expansionMap ?? {});
     const keySet = new Set(expansionKeys);
-    const intersection = (expansionClassMap ?? []).filter((v) => keySet.has(v));
-    const targets = intersection.length > 0 ? intersection : expansionKeys;
 
     const isLoadingExpansionMap = expansionKeys.length === 0;
     const isWaitingTimetable = !isLoadingExpansionMap && (expansionClassMap?.length ?? 0) === 0;
+
+    // このクラスの時間割から実際に登場した選択科目（origin）だけを対象にする。
+    // ロード中（isWaitingTimetable）は、まだクラス固有の科目が判明していないため
+    // 全選択科目にフォールバックせず、空のまま「読み込み中」表示に委ねる。
+    const targets = isWaitingTimetable
+        ? []
+        : (expansionClassMap ?? []).filter((v) => keySet.has(v));
+
+    const isReady = !isLoadingExpansionMap && !isWaitingTimetable;
 
     return (
         <Modal open={open} onClose={onClose} title="選択科目の設定" blocking={true}>
@@ -44,11 +50,11 @@ export default function SubjectsSetupModal({
                     <p className="muted">時間割データを読み込み中…</p>
                 )}
 
-                {!isLoadingExpansionMap && targets.length === 0 && (
+                {isReady && targets.length === 0 && (
                     <p className="muted">選択科目が見つかりませんでした。</p>
                 )}
 
-                {!isLoadingExpansionMap &&
+                {isReady &&
                     targets.map((v) => (
                         <label className="subject-row" key={v}>
                             <span className="subject-code">{v}</span>

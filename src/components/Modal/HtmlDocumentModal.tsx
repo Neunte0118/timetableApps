@@ -8,6 +8,11 @@ type Props = ModalType & {
     blocking?: boolean;
 };
 
+/**
+ * html は build 時に `?raw` で読み込む自前の静的ファイル
+ * （content/help.html, content/source.html）のみを想定している。
+ * 外部入力・CSV由来のテキストをこの html prop に渡さないこと。
+ */
 export default function HtmlDocumentModal({
     open,
     onClose,

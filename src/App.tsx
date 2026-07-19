@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 
 import { Routes, Route } from "react-router-dom";
 
-import { getStorage, setStorage } from "./utils/storage";
+import { getStorage } from "./utils/storage";
 
 import { useTheme } from "./hooks/useTheme";
 
@@ -10,7 +10,7 @@ import HomePage from "./HomePage";
 import ExamTable from "./examTable/ExamTable";
 
 export default function App() {
-    const {theme, toggleTheme} = useTheme();
+    const { theme, toggleTheme } = useTheme();
     const [isTermAccepted, setIsTermAccepted] = useState<boolean>(getStorage("isTermAccepted") ?? false);
     const [classNumber, setClassNumber] = useState<number | null>(getStorage("classNumber") ?? null);
     const [subjectChoices, setSubjectChoices] = useState<Record<string, string> | null>(getStorage("subjectChoices"));
@@ -36,7 +36,7 @@ export default function App() {
             <Route
                 path="/tools/timetableApps/exam/:examTableId"
                 element={
-                    <ExamTable 
+                    <ExamTable
                         theme={theme}
                         isTermAccepted={isTermAccepted}
                         classNumber={classNumber}
@@ -44,6 +44,6 @@ export default function App() {
                     />
                 }
             />
-        </Routes>  
-    )
+        </Routes>
+    );
 }

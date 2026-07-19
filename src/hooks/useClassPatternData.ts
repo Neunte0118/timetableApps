@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
-import { fetchCSV } from "../services/fetchCSV";
-import { getStorage, setStorage } from "../utils/storage";
+import { useCachedCSV } from "./useCachedCSV";
 import type { NestedRecord, ClassTimetableData, Weekday } from "../types/type";
 
 // ← 実際に公開したスプレッドシートのCSV公開URLに差し替えてください
@@ -46,35 +44,11 @@ function parseRows(rows: NestedRecord[]): Record<number, ClassTimetableData> {
 }
 
 export function useClassPatternData() {
-    const [classPatternData, setClassPatternData] =
-        useState<Record<number, ClassTimetableData> | null>(null);
-
-    useEffect(() => {
-        const CACHE_KEY = "classPatternData";
-
-        const load = async () => {
-            const cached = getStorage<Record<number, ClassTimetableData>>(CACHE_KEY);
-            if (cached) {
-                setClassPatternData(cached);
-            }
-
-            try {
-                const rows = await fetchCSV(CLASS_PATTERN_URL);
-                const parsed = parseRows(rows);
-
-                setClassPatternData(parsed);
-                setStorage(CACHE_KEY, parsed);
-            } catch (e) {
-                console.error("時間割パターン表の読み込みに失敗しました", e);
-
-                if (!getStorage<Record<number, ClassTimetableData>>(CACHE_KEY)) {
-                    setClassPatternData({});
-                }
-            }
-        };
-
-        load();
-    }, []);
-
-    return classPatternData;
+    return useCachedCSV<Record<number, ClassTimetableData>>({
+        cacheKey: "classPatternData",
+        url: CLASS_PATTERN_URL,
+        parse: parseRows,
+        fallback: () => ({}),
+        errorLabel: "時間割パターン表の読み込みに失敗しました",
+    });
 }

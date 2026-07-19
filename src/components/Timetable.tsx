@@ -1,13 +1,6 @@
 import "./Timetable.css";
-import { tableModeType } from "../types/type";
+import type { tableModeType, TeacherMap, TimetableOverrideRow } from "../types/type";
 import { addDays, formatMonthDayJa, formatMonthDaySlash } from "../utils/date";
-
-type TimetableOverrideRow = {
-    dates: string;
-    classes: string;
-    periods: string;
-    subjects: string;
-};
 
 type Props = {
     classNumber: number | null;
@@ -15,16 +8,37 @@ type Props = {
     selectedOffset: number;
     setSelectedOffset: (v: number) => void;
     daysPerRow: number;
-    isSplit: boolean;
     timetables: Record<number, Record<string, string[]>>;
     subjectChoices: Record<string, string>;
     expansionMap: Record<string, string[]>;
     subjectRoomsMap: Record<string, string>;
-    teacherMap: Record<string, unknown>;
+    teacherMap: TeacherMap;
     tableMode: tableModeType;
     filterSubject?: string;
     holidays: Record<string, string>;
     overrides?: TimetableOverrideRow[];
+};
+
+// HR担任（クラス番号は1始まり、配列インデックスは0始まり）
+const HR_TEACHERS = ["丸山", "小野", "衛藤", "東", "本城", "木山", "樋口", "村上", "濱田"];
+
+type PEKey = "体育共修" | "体育別修";
+
+const isPEKey = (v: string): v is PEKey => v === "体育共修" || v === "体育別修";
+
+const PE_TEACHERS: Record<PEKey, Record<string, string | undefined>> = {
+    "体育共修": {
+        "ゴルフ": "市田",
+        "テニス": "未定義",
+        "ﾊﾞﾄﾞﾐﾝﾄﾝ": "未定義",
+        "卓球": "未定義",
+    },
+    "体育別修": {
+        "ｿﾌﾄﾎﾞｰﾙ": "未定義",
+        "テニス": "塩見",
+        "ﾀﾞﾌﾞﾙﾀﾞｯﾁ": "未定義",
+        "バスケ": "未定義",
+    },
 };
 
 export default function Timetable({
@@ -33,7 +47,6 @@ export default function Timetable({
     selectedOffset,
     setSelectedOffset,
     daysPerRow,
-    isSplit,
     timetables,
     subjectChoices,
     expansionMap,
@@ -44,49 +57,28 @@ export default function Timetable({
     holidays,
     overrides,
 }: Props) {
-    
     const timetableData = classNumber ? timetables?.[classNumber] : undefined;
 
-    const resolveTeacher = (subjectName: string, originalCode: string) => {
-
+    const resolveTeacher = (subjectName: string, originalCode: string): string | undefined => {
         if (subjectName === "HR") {
-            const classTeacher = ["丸山", "小野", "衛藤", "東", "本城", "木山", "樋口", "村上", "濱田"];
-            return classTeacher[(classNumber ?? 0) - 1];
-        }
-
-        type PEKey = "体育共修" | "体育別修";
-
-        const isPEKey = (v: string): v is PEKey =>
-            v === "体育共修" || v === "体育別修";
-
-
-        const PETeachers: Record<PEKey, Record<string, string | undefined>> = {
-            "体育共修": {
-                "ゴルフ": "市田",
-                "テニス": "未定義",
-                "ﾊﾞﾄﾞﾐﾝﾄﾝ": "未定義",
-                "卓球": "未定義",
-            },
-
-            "体育別修": {
-                "ｿﾌﾄﾎﾞｰﾙ": "未定義",
-                "テニス": "塩見",
-                "ﾀﾞﾌﾞﾙﾀﾞｯﾁ": "未定義",
-                "バスケ": "未定義",
-            },
+            return HR_TEACHERS[(classNumber ?? 0) - 1];
         }
 
         if (isPEKey(originalCode)) {
-            return PETeachers[originalCode]?.[subjectName];
+            return PE_TEACHERS[originalCode]?.[subjectName];
         }
-        
+
         const teacherName = teacherMap[subjectName];
 
         if (typeof teacherName === "string") {
             return teacherName;
-        } else if (Array.isArray(teacherName)) {
+        }
+
+        if (Array.isArray(teacherName)) {
             return teacherName[(classNumber ?? 0) - 1];
         }
+
+        return undefined;
     };
 
     const resolveCell = (code: string | undefined) => {
@@ -108,7 +100,7 @@ export default function Timetable({
         }
 
         // teachers
-        return { display: resolveTeacher(subjectName, original), subjectName };
+        return { display: resolveTeacher(subjectName, original) ?? "", subjectName };
     };
 
     const buildOffsets = (start: number, length: number) =>
@@ -133,27 +125,22 @@ export default function Timetable({
         );
     };
 
+    const hasOverrideForPeriod = (dateKey: string, period: number): boolean =>
+        overrides?.some(
+            (o) =>
+                o.dates === dateKey &&
+                (o.classes === "0" || Number(o.classes) === classNumber) &&
+                Number(o.periods) === period
+        ) ?? false;
 
     const renderTable = (tableClassName: string, offsets: number[]) => {
         const hasSixthPeriod = offsets.some((offset) => {
             const dateKey = formatMonthDayJa(addDays(baseDay, offset));
-
             const hasTimetable6 = (timetableData?.[dateKey]?.length ?? 0) >= 6;
-
-            const hasOverride6 =
-                overrides?.some(
-                    (o) =>
-                        o.dates === dateKey &&
-                        (o.classes === "0" || Number(o.classes) === classNumber) &&
-                        Number(o.periods) === 6
-                ) ?? false;
-
-            return hasTimetable6 || hasOverride6;
+            return hasTimetable6 || hasOverrideForPeriod(dateKey, 6);
         });
 
-        const periods = hasSixthPeriod
-            ? [1, 2, 3, 4, 5, 6]
-            : [1, 2, 3, 4, 5];
+        const periods = hasSixthPeriod ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5];
 
         return (
             <table className={tableClassName}>
@@ -201,17 +188,9 @@ export default function Timetable({
                                 const override = findOverride(dateKey, period);
 
                                 const code = override?.subjects ?? raw;
-                                const resolved = resolveCell(code);
-
-                                const display = resolved.display;
-                                const subjectName = resolved.subjectName;
+                                const { display, subjectName } = resolveCell(code);
 
                                 const isChanged = Boolean(override);
-
-                                const hasSixthPeriod = Object.values(timetableData ?? {}).some(
-                                    (day) => day?.[5]
-                                );
-
                                 const isSelected = offset === selectedOffset;
                                 const hasFilter = Boolean(filterSubject);
                                 const isHit = hasFilter && subjectName === filterSubject;

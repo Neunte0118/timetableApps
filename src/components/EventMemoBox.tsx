@@ -1,15 +1,19 @@
 import "./EventMemoBox.css";
 
 import { useEffect, useMemo, useState } from "react";
-import { fetchCSV } from "../services/fetchCSV";
-import {
-    openDB,
-    putData,
-    getData,
-    deleteData,
-} from "../utils/indexedDB";
-import { getStorage, setStorage } from "@/utils/storage";
+import { openDB, putData, getData, deleteData } from "../utils/indexedDB";
 import { formatMonthDayJa, formatMonthDaySlash } from "../utils/date";
+import { useCachedCSV } from "../hooks/useCachedCSV";
+import { escapeHtmlWithoutWhiteList } from "../utils/escapeHtml";
+import type { NestedRecord } from "../types/type";
+
+const EXTRA_EVENT_URL =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vR1dN6poNIpBsmis-JO2N2Hjiu96bkMuqs2fDtf1V3FH6iBs3BuQZVskaDq8n-xhoKEMdGYD-P5LscW/pub?gid=0&single=true&output=csv";
+
+// CSSカラー値として許容する形式のみを通す（style属性へのインジェクション対策）
+const SAFE_COLOR_PATTERN = /^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|rgba?\([\d.,%\s]+\))$/;
+
+const isSafeColor = (value: string): boolean => SAFE_COLOR_PATTERN.test(value.trim());
 
 type ExtraEventRow = {
     dates: string;
@@ -29,40 +33,36 @@ type Props = {
     plannedEvents: Record<string, string>;
 };
 
-export default function EventMemoBox({
-    theme,
-    dayKey,
-    plannedEvents,
-}: Props) {
-    const EXTRA_EVENT_URL =
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vR1dN6poNIpBsmis-JO2N2Hjiu96bkMuqs2fDtf1V3FH6iBs3BuQZVskaDq8n-xhoKEMdGYD-P5LscW/pub?gid=0&single=true&output=csv";
+function parseExtraEventRows(rows: NestedRecord[]): ExtraEventRow[] {
+    return rows.map((row) => ({
+        dates: typeof row.dates === "string" ? row.dates : "",
+        contents: typeof row.contents === "string" ? row.contents : "",
+        light_color: typeof row.light_color === "string" ? row.light_color : undefined,
+        dark_color: typeof row.dark_color === "string" ? row.dark_color : undefined,
+    }));
+}
 
-    
+export default function EventMemoBox({ theme, dayKey, plannedEvents }: Props) {
     const dayKeyJa = useMemo(() => formatMonthDayJa(dayKey), [dayKey]);
     const dayKeySlash = useMemo(() => formatMonthDaySlash(dayKey), [dayKey]);
-
-    const memoStorageKey = useMemo(
-        () => `${dayKeySlash}`,
-        [dayKeySlash]
-    );
+    const memoStorageKey = dayKeySlash;
 
     const [db, setDb] = useState<IDBDatabase | null>(null);
-
-    const [extraEvents, setExtraEvents] =
-        useState<ExtraEventRow[] | null>(null);
-
-    const [extraError, setExtraError] =
-        useState<string | null>(null);
-
     const [memo, setMemo] = useState("");
+
+    const extraEvents = useCachedCSV<ExtraEventRow[]>({
+        cacheKey: "extraEvents",
+        url: EXTRA_EVENT_URL,
+        parse: parseExtraEventRows,
+        fallback: () => [],
+        errorLabel: "追加行事の読み込みに失敗しました",
+    });
 
     // IndexedDB 初期化
     useEffect(() => {
         openDB("TimetableDB", 2, (db) => {
             if (!db.objectStoreNames.contains("memos")) {
-                db.createObjectStore("memos", {
-                    keyPath: "date",
-                });
+                db.createObjectStore("memos", { keyPath: "date" });
             }
         }).then(setDb);
     }, []);
@@ -72,29 +72,22 @@ export default function EventMemoBox({
         if (!db) return;
 
         getData<MemoData>(db, "memos", memoStorageKey)
-            .then((data) => {
-                setMemo(data?.text ?? "");
-            })
-            .catch(() => {
-                setMemo("");
-            });
+            .then((data) => setMemo(data?.text ?? ""))
+            .catch(() => setMemo(""));
     }, [db, memoStorageKey]);
 
-    // メモ保存
-// メモ保存
+    // メモ保存（デバウンス）
     useEffect(() => {
         if (!db) return;
 
         const id = window.setTimeout(() => {
             const trimmed = memo.trim();
 
-            // 空なら削除
             if (trimmed === "") {
                 deleteData(db, "memos", memoStorageKey);
                 return;
             }
 
-            // 空でなければ保存
             putData<MemoData>(db, "memos", {
                 date: memoStorageKey,
                 text: memo,
@@ -104,64 +97,24 @@ export default function EventMemoBox({
         return () => window.clearTimeout(id);
     }, [db, memo, memoStorageKey]);
 
-    // CSV取得
-    useEffect(() => {
-        const CACHE_KEY = "extraEvents";
-
-        const load = async () => {
-            // キャッシュを先に表示
-            const cached = getStorage<ExtraEventRow[]>(CACHE_KEY);
-            if (cached) {
-                setExtraEvents(cached);
-                setExtraError(null);
-            }
-
-            try {
-                const data = await fetchCSV(EXTRA_EVENT_URL) as ExtraEventRow[];
-
-                setExtraEvents(data);
-                setExtraError(null);
-                setStorage(CACHE_KEY, data);
-            } catch {
-                console.error("追加行事の読み込みに失敗しました");
-
-                // キャッシュが無い場合だけエラー表示
-                if (!cached) {
-                    setExtraEvents([]);
-                    setExtraError("追加行事の読み込みに失敗しました");
-                }
-            }
-        };
-
-        load();
-    }, []);
-
     const eventLines = useMemo(() => {
         const lines: string[] = [];
 
-        const planned =
-            (plannedEvents?.[dayKeyJa] ?? "").trim();
-
+        const planned = (plannedEvents?.[dayKeyJa] ?? "").trim();
         if (planned) {
-            lines.push(planned);
+            lines.push(escapeHtmlWithoutWhiteList(planned));
         }
 
-        const extras = (extraEvents ?? []).filter(
-            (row) => row.dates === dayKeyJa
-        );
+        const extras = (extraEvents ?? []).filter((row) => row.dates === dayKeyJa);
 
         extras.forEach((row) => {
-            const color =
-                theme === "light"
-                    ? row.light_color
-                    : row.dark_color;
+            const rawColor = theme === "light" ? row.light_color : row.dark_color;
+            const safeContents = escapeHtmlWithoutWhiteList(row.contents);
 
-            if (color) {
-                lines.push(
-                    `<span style="color:${color}">${row.contents}</span>`
-                );
+            if (rawColor && isSafeColor(rawColor)) {
+                lines.push(`<span style="color:${rawColor}">${safeContents}</span>`);
             } else {
-                lines.push(row.contents);
+                lines.push(safeContents);
             }
         });
 
@@ -169,10 +122,7 @@ export default function EventMemoBox({
     }, [plannedEvents, dayKeyJa, extraEvents, theme]);
 
     const eventHtml = useMemo(() => {
-        if (eventLines.length === 0) {
-            return "";
-        }
-
+        if (eventLines.length === 0) return "";
         return eventLines.join("<br />");
     }, [eventLines]);
 
@@ -181,29 +131,12 @@ export default function EventMemoBox({
             <div className="label">行事</div>
 
             <div className="event-cell">
-                {extraEvents === null && (
-                    <div className="muted">
-                        読み込み中…
-                    </div>
-                )}
-
-                {extraError && (
-                    <div className="muted">
-                        {extraError}
-                    </div>
-                )}
+                {extraEvents === null && <div className="muted">読み込み中…</div>}
 
                 {eventHtml ? (
-                    <div
-                        className="event-html"
-                        dangerouslySetInnerHTML={{
-                            __html: eventHtml,
-                        }}
-                    />
+                    <div className="event-html" dangerouslySetInnerHTML={{ __html: eventHtml }} />
                 ) : (
-                    <div className="muted">
-                        なし
-                    </div>
+                    extraEvents !== null && <div className="muted">なし</div>
                 )}
             </div>
 
@@ -212,11 +145,9 @@ export default function EventMemoBox({
             <textarea
                 className="memo-input"
                 value={memo}
-                onChange={(e) =>
-                    setMemo(e.target.value)
-                }
+                onChange={(e) => setMemo(e.target.value)}
                 placeholder="メモを入力…"
-                style={{ resize: "none"}}
+                style={{ resize: "none" }}
             />
         </div>
     );

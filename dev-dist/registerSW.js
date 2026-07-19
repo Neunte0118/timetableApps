@@ -1,1 +1,0 @@
-if('serviceWorker' in navigator) navigator.serviceWorker.register('/tools/timetableApps/dev-sw.js?dev-sw', { scope: '/tools/timetableApps/', type: 'classic' })

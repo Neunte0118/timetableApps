@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
-import { fetchCSV } from "../services/fetchCSV";
-import { getStorage, setStorage } from "../utils/storage";
+import { useCachedCSV } from "./useCachedCSV";
 import type { NestedRecord } from "../types/type";
 
 // ← 実際に公開したスプレッドシートのCSV公開URLに差し替えてください
@@ -23,34 +21,11 @@ function parseRows(rows: NestedRecord[]): Record<string, string> {
 }
 
 export function useHolidaysData() {
-    const [holidays, setHolidays] = useState<Record<string, string> | null>(null);
-
-    useEffect(() => {
-        const CACHE_KEY = "holidays";
-
-        const load = async () => {
-            const cached = getStorage<Record<string, string>>(CACHE_KEY);
-            if (cached) {
-                setHolidays(cached);
-            }
-
-            try {
-                const rows = await fetchCSV(HOLIDAYS_URL);
-                const parsed = parseRows(rows);
-
-                setHolidays(parsed);
-                setStorage(CACHE_KEY, parsed);
-            } catch (e) {
-                console.error("祝日情報の読み込みに失敗しました", e);
-
-                if (!getStorage<Record<string, string>>(CACHE_KEY)) {
-                    setHolidays({});
-                }
-            }
-        };
-
-        load();
-    }, []);
-
-    return holidays;
+    return useCachedCSV<Record<string, string>>({
+        cacheKey: "holidays",
+        url: HOLIDAYS_URL,
+        parse: parseRows,
+        fallback: () => ({}),
+        errorLabel: "祝日情報の読み込みに失敗しました",
+    });
 }

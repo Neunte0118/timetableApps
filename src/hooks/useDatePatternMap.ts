@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
-import { fetchCSV } from "../services/fetchCSV";
-import { getStorage, setStorage } from "../utils/storage";
+import { useCachedCSV } from "./useCachedCSV";
 import type { NestedRecord } from "../types/type";
 
 // ← 実際に公開したスプレッドシートのCSV公開URLに差し替えてください
@@ -35,35 +33,11 @@ function parseRows(rows: NestedRecord[]): Record<string, string[]> {
 }
 
 export function useDatePatternMap() {
-    const [datePatternMap, setDatePatternMap] =
-        useState<Record<string, string[]> | null>(null);
-
-    useEffect(() => {
-        const CACHE_KEY = "datePatternMap";
-
-        const load = async () => {
-            const cached = getStorage<Record<string, string[]>>(CACHE_KEY);
-            if (cached) {
-                setDatePatternMap(cached);
-            }
-
-            try {
-                const rows = await fetchCSV(DATE_PATTERN_MAP_URL);
-                const parsed = parseRows(rows);
-
-                setDatePatternMap(parsed);
-                setStorage(CACHE_KEY, parsed);
-            } catch (e) {
-                console.error("日付パターン表の読み込みに失敗しました", e);
-
-                if (!getStorage<Record<string, string[]>>(CACHE_KEY)) {
-                    setDatePatternMap({});
-                }
-            }
-        };
-
-        load();
-    }, []);
-
-    return datePatternMap;
+    return useCachedCSV<Record<string, string[]>>({
+        cacheKey: "datePatternMap",
+        url: DATE_PATTERN_MAP_URL,
+        parse: parseRows,
+        fallback: () => ({}),
+        errorLabel: "日付パターン表の読み込みに失敗しました",
+    });
 }

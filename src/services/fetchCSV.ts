@@ -1,99 +1,17 @@
-/*
-import Papa from "papaparse";
-
-export async function fetchCSV(url: string): Promise<Record<string, string>[]> {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`CSVの取得に失敗しました: ${response.status} ${response.statusText}`);
-  }
-
-  const text = await response.text();
-  const result = Papa.parse<Record<string, string>>(text, {
-    header: true,
-    skipEmptyLines: true,
-  });
-
-  if (result.errors.length > 0) {
-    throw new Error(`CSVの解析に失敗しました: ${result.errors[0].message}`);
-  }
-
-  console.log(result.data);
-
-  return result.data;
-}
-*/
-
-
 import Papa from "papaparse";
 import type { NestedRecord } from "../types/type";
 
 type PathSegment = string | number;
 
-type Row = {
-  key: string;
-  examName: string;
-  dates: string;
-  displayDates: string;
-  subjects: string;
-  range: string;
-  assignments: string;
-};
-
-type RowData = {
-  dates: string;
-  subjects: string;
-  range: string;
-  assignments: string;
-};
-
-export function groupByKeyAndDate(rows: Row[]) {
-  return rows.reduce<Record<string, {
-    examName: string;
-    dates: Record<string, RowData[]>;
-  }>>((acc, row) => {
-
-    const {
-      key,
-      examName,
-      displayDates,
-      ...rest
-    } = row;
-
-    // 初期化
-    if (!acc[key]) {
-      acc[key] = {
-        examName,
-        dates: {}
-      };
-    }
-
-    // 日付キー
-    if (!acc[key].dates[displayDates]) {
-      acc[key].dates[displayDates] = [];
-    }
-
-    acc[key].dates[displayDates].push(rest);
-
-    return acc;
-  }, {});
-}
-
-type RowWithoutKey = Omit<Row, "key">;
-
-export function groupByKey(rows: Row[]): Record<string, RowWithoutKey> {
-  return rows.reduce<Record<string, RowWithoutKey>>((acc, row) => {
-    const { key, ...value } = row;
-    acc[key] = value;
-    return acc;
-  }, {});
-}
-
+/**
+ * "a.b[0].c" のようなヘッダー名をパスセグメント列に変換する。
+ * 例: "dates" -> ["dates"], "items[0].name" -> ["items", 0, "name"]
+ */
 function parsePath(key: string): PathSegment[] {
     const segments: PathSegment[] = [];
 
     for (const part of key.split(".")) {
-        const re = /([^\[\]]+)|\[(\d+)\]/g;
+        const re = /([^[\]]+)|\[(\d+)\]/g;
         let match: RegExpExecArray | null;
 
         while ((match = re.exec(part)) !== null) {
@@ -108,11 +26,7 @@ function parsePath(key: string): PathSegment[] {
     return segments;
 }
 
-function setDeep(
-    target: NestedRecord,
-    path: PathSegment[],
-    value: unknown
-): void {
+function setDeep(target: NestedRecord, path: PathSegment[], value: unknown): void {
     let current: any = target;
 
     for (let i = 0; i < path.length; i++) {
@@ -125,41 +39,35 @@ function setDeep(
             return;
         }
 
-        if (
-            current[key as any] === undefined ||
-            typeof current[key as any] !== "object"
-        ) {
-            current[key as any] =
-                typeof next === "number" ? [] : {};
+        if (current[key as any] === undefined || typeof current[key as any] !== "object") {
+            current[key as any] = typeof next === "number" ? [] : {};
         }
 
         current = current[key as any];
     }
 }
 
-function rowToNestedObject(
-    row: Record<string, string>
-): NestedRecord {
+function rowToNestedObject(row: Record<string, string>): NestedRecord {
     const result: NestedRecord = {};
 
     for (const [key, value] of Object.entries(row)) {
         if (!key.trim()) continue;
-
         setDeep(result, parsePath(key), value);
     }
 
     return result;
 }
 
-export async function fetchCSV(
-    url: string
-): Promise<NestedRecord[]> {
+/**
+ * CSV URLを取得し、ヘッダーのドット/角括弧記法をネストしたオブジェクトに
+ * 変換して返す。ヘッダーに "a.b" や "items[0]" のような記法がなければ
+ * 単純なフラットオブジェクトの配列として扱える。
+ */
+export async function fetchCSV(url: string): Promise<NestedRecord[]> {
     const response = await fetch(url);
 
     if (!response.ok) {
-        throw new Error(
-            `CSVの取得に失敗しました: ${response.status}`
-        );
+        throw new Error(`CSVの取得に失敗しました: ${response.status} (${url})`);
     }
 
     const text = await response.text();
@@ -170,8 +78,8 @@ export async function fetchCSV(
     });
 
     if (result.errors.length > 0) {
-        throw new Error(result.errors[0].message);
+        throw new Error(`CSVの解析に失敗しました: ${result.errors[0].message}`);
     }
+
     return result.data.map(rowToNestedObject);
 }
-
