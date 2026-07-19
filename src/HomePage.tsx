@@ -23,6 +23,7 @@ import { addDays, formatMonthDayJa, formatMonthDaySlash, startOfDay } from "./ut
 
 import { useTimetables } from "./hooks/useTimetable";
 import { useStaticData } from "./hooks/useStaticData";
+import { useResolvedTimetables } from "./hooks/useResolvedTimetables";
 
 import { fetchCSV } from "./services/fetchCSV";
 
@@ -59,6 +60,7 @@ export default function HomePage({
         expansionMap,
         subjectsRoomsMap,
         teacherMap,
+        datePatternMap,
     } = useStaticData();
 
     const [UpdateData, setUpdateData] = useState<NestedRecord[]>();
@@ -71,6 +73,7 @@ export default function HomePage({
     const dayKeySlash = useMemo(() => formatMonthDaySlash(day), [day])
 
     const {timetables, loadTimetable} = useTimetables();
+    const resolvedTimetables = useResolvedTimetables(timetables, datePatternMap);
     const [tableMode, setTableMode] = useState<"subjects" | "rooms" | "teachers">("subjects");
     
     const toggleTableMode = () => {
@@ -193,7 +196,7 @@ type TimetableOverrideRow = {
     useEffect(() => {
         if (!classNumber) return;
 
-        const classData = timetables?.[classNumber];
+        const classData = resolvedTimetables?.[classNumber];
         if (!classData) return;
 
         const allSubjects = [
@@ -211,7 +214,7 @@ type TimetableOverrideRow = {
             }
             return allSubjects;
         });
-    }, [timetables, classNumber]);
+    }, [resolvedTimetables, classNumber]);
 
     useEffect(() => {
         if (!classNumber) return;
@@ -327,7 +330,7 @@ type TimetableOverrideRow = {
                 setSelectedOffset={setSelectedOffset}
                 daysPerRow={daysPerRow}
                 isSplit={isSplit}
-                timetables={timetables}
+                timetables={resolvedTimetables}
                 subjectChoices={subjectChoices ?? {}}
                 expansionMap={expansionMap ?? {}}
                 subjectRoomsMap={subjectsRoomsMap ?? []}
