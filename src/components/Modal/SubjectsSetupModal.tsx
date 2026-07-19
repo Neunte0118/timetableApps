@@ -1,6 +1,6 @@
 import Modal from "../Modal";
 import type { ModalType } from "../../types/type";
-import "./SubjectSetupModal.css"
+import "./SubjectsSetupModal.css"
 
 type Props = ModalType & {
     expansionMap: Record<string, string[]>; // ← 選択肢の配列に修正
@@ -9,7 +9,7 @@ type Props = ModalType & {
     setSubjectChoices: (v: Record<string, string>) => void;
 };
 
-export default function SubjectSetupModal({
+export default function SubjectsSetupModal({
     open,
     onClose,
     expansionMap,

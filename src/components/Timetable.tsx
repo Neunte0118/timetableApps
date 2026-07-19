@@ -2,14 +2,6 @@ import "./Timetable.css";
 import { tableModeType } from "../types/type";
 import { addDays, formatMonthDayJa, formatMonthDaySlash } from "../utils/date";
 
-type SubjectRoomMap = {
-    origin: string;
-    electives: string;
-    rooms: string;
-    name: string;
-    teacher?: string;
-};
-
 type TimetableOverrideRow = {
     dates: string;
     classes: string;
@@ -27,7 +19,7 @@ type Props = {
     timetables: Record<number, Record<string, string[]>>;
     subjectChoices: Record<string, string>;
     expansionMap: Record<string, string[]>;
-    subjectRoomsMap: SubjectRoomMap[];
+    subjectRoomsMap: Record<string, string>;
     teacherMap: Record<string, unknown>;
     tableMode: tableModeType;
     filterSubject?: string;
@@ -56,29 +48,7 @@ export default function Timetable({
     const timetableData = classNumber ? timetables?.[classNumber] : undefined;
 
     const resolveTeacher = (subjectName: string, originalCode: string) => {
-        /*
-        const candidates = [
-            subjectName,
-            originalCode,
-            subjectName.trim(),
-            originalCode.trim(),
-            subjectName.toLowerCase(),
-            originalCode.toLowerCase(),
-        ];
-        console.log("subjectName", subjectName, "originalCode", originalCode);
-        for (const key of candidates) {
-            const v = (teacherMap as Record<string, unknown>)?.[key];
-            if (typeof v === "string") return v;
-            if (v && typeof v === "object") {
-                const obj = v as Record<string, unknown>;
-                if (typeof obj.teacher === "string") return obj.teacher;
-                if (typeof obj.name === "string") return obj.name;
-                if (typeof obj.value === "string") return obj.value;
-            }
-        }
 
-        return "null";
-        */
         if (subjectName === "HR") {
             const classTeacher = ["丸山", "小野", "衛藤", "東", "本城", "木山", "樋口", "村上", "濱田"];
             return classTeacher[(classNumber ?? 0) - 1];
@@ -132,11 +102,9 @@ export default function Timetable({
             return { display: subjectName, subjectName };
         }
 
-        const mapping = subjectRoomsMap?.find((item) => item.electives === subjectName);
-
         if (tableMode === "rooms") {
             if (!isExpandable) return { display: `${classNumber}組教室`, subjectName };
-            return { display: mapping?.name ?? "?", subjectName };
+            return { display: subjectRoomsMap?.[subjectName] ?? "?", subjectName };
         }
 
         // teachers

@@ -202,7 +202,7 @@ React の Virtual DOM が自動的に必要な箇所のみ再レンダリング�
    - Redux Persist の導入で さらに複雑な状態に対応
 
 2. **コンポーネント分割**
-   - ClassSetupModal, SubjectSetupModal を独立コンポーネント化
+   - ClassSetupModal, SubjectsSetupModal を独立コンポーネント化
 
 3. **テスト**
    - Vitest + React Testing Library を導入

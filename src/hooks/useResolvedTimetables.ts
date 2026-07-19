@@ -2,24 +2,30 @@ import { useMemo } from "react";
 import type { ClassTimetableData, Weekday } from "../types/type";
 
 type ParsedCode = {
-  week: "A" | "B" | "C";
-  weekday: Weekday;
-  index: number
+    type: string;
+    weekday: Weekday;
+    index: number;
 };
+
+const isWeekday = (v: string): v is Weekday =>
+    v === "月" || v === "火" || v === "水" || v === "木" || v === "金" || v === "土";
 
 function parsePatternCode(code: string): ParsedCode | null {
     if (!code) return null;
 
-    const match = code.match(/^([ABC])([月火水木金土])(\d+)$/);
+    const match = code.match(/^(.+?)([月火水木金土])(\d+)$/);
     if (!match) return null;
 
-    const [, week, weekday, numStr] = match;
+    const [, type, weekdayRaw, numStr] = match;
+
+    if (!isWeekday(weekdayRaw)) return null;
+
     const index = Number(numStr);
-    if (!Number.isFinite(index) || index < 1) return null;
+    if (!Number.isInteger(index) || index < 1) return null;
 
     return {
-        week: week as "A" | "B" | "C",
-        weekday: weekday as Weekday,
+        type,
+        weekday: weekdayRaw,
         index,
     };
 }
@@ -31,24 +37,23 @@ function resolveCode(
     if (!classData || !code) return "";
 
     const parsed = parsePatternCode(code);
-    if (!parsed) {
-        console.warn(`不正なパターンコード: ${code}`);
-        return code;
-    }
 
-    return classData[parsed.week]?.[parsed.weekday]?.[parsed.index - 1] ?? "";
+    // パターンでなければそのまま返す
+    if (!parsed) return code;
+
+    return classData[parsed.type]?.[parsed.weekday]?.[parsed.index - 1] ?? "";
 }
 
 export function useResolvedTimetables(
-    rawTimetables: Record<number, ClassTimetableData>,
+    classPatternData: Record<number, ClassTimetableData> | null | undefined,
     datePatternMap: Record<string, string[]> | null | undefined
 ): Record<number, Record<string, string[]>> {
     return useMemo(() => {
-        if (!datePatternMap) return {};
+        if (!datePatternMap || !classPatternData) return {};
 
         const result: Record<number, Record<string, string[]>> = {};
 
-        Object.entries(rawTimetables).forEach(([classNoStr, classData]) => {
+        Object.entries(classPatternData).forEach(([classNoStr, classData]) => {
             const classNo = Number(classNoStr);
             const resolvedForClass: Record<string, string[]> = {};
 
@@ -62,5 +67,5 @@ export function useResolvedTimetables(
         });
 
         return result;
-    }, [rawTimetables, datePatternMap]);
+    }, [classPatternData, datePatternMap]);
 }

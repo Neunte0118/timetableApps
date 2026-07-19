@@ -26,10 +26,6 @@ export type NestedRecord = JSONObject;
 
 export type Weekday = "月" | "火" | "水" | "木" | "金" | "土";
 
-export type WeekPattern = Record<Weekday, string[]>;
+export type WeekPattern = Partial<Record<Weekday, string[]>>;
 
-export type ClassTimetableData = {
-    A?: WeekPattern;
-    B?: WeekPattern;
-    C?: WeekPattern;
-};
+export type ClassTimetableData = Record<string, WeekPattern>;

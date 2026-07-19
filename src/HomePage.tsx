@@ -9,7 +9,7 @@ import { useModalQueue } from "./hooks/useModalQueue";
 
 import TermModal from "./components/Modal/TermModal";
 import ClassSetupModal from "./components/Modal/ClassSetupModal";
-import SubjectSetupModal from "./components/Modal/SubjectsSetupModal";
+import SubjectsSetupModal from "./components/Modal/SubjectsSetupModal";
 import UpdateInfoModal from "./components/Modal/UpdateInfoModal";
 import FilterModal from "./components/Modal/FilterModal";
 import SettingModal from "./components/Modal/SettingModal";
@@ -21,8 +21,12 @@ import sourceHtml from "./content/source.html?raw";
 import { getStorage, setStorage } from "./utils/storage";
 import { addDays, formatMonthDayJa, formatMonthDaySlash, startOfDay } from "./utils/date";
 
-import { useTimetables } from "./hooks/useTimetable";
+import { useDatePatternMap } from "./hooks/useDatePatternMap";
+import { useClassPatternData } from "./hooks/useClassPatternData";
+import { useEventsData } from "./hooks/useEventsData";
+import { useHolidaysData } from "./hooks/useHolidaysData";
 import { useStaticData } from "./hooks/useStaticData";
+import { useSubjectsData } from "./hooks/useSubjectsData";
 import { useResolvedTimetables } from "./hooks/useResolvedTimetables";
 
 import { fetchCSV } from "./services/fetchCSV";
@@ -47,20 +51,13 @@ export default function HomePage({
   subjectChoices, setSubjectChoices
 }: Props) {
     const VERSION = "3.0.0";
-    
-    
     const [filterSubject, setFilterSubject] = useState<string>();
     const [expansionClassMap, setExpansionClassMap] = useState<string[]>([]);
 
     const { setQueue, current, setCurrent } = useModalQueue();
 
     const {
-        events,
-        holidays,
-        expansionMap,
-        subjectsRoomsMap,
         teacherMap,
-        datePatternMap,
     } = useStaticData();
 
     const [UpdateData, setUpdateData] = useState<NestedRecord[]>();
@@ -69,11 +66,14 @@ export default function HomePage({
     const [selectedOffset, setSelectedOffset] = useState<number>(0);
 
     const day = useMemo(() => addDays(baseDay, selectedOffset), [baseDay, selectedOffset]);
-    const dayKey = useMemo(() => formatMonthDayJa(day), [day]);
-    const dayKeySlash = useMemo(() => formatMonthDaySlash(day), [day])
+    const datePatternMap = useDatePatternMap();
+    const classPatternData = useClassPatternData();
+    const resolvedTimetables = useResolvedTimetables(classPatternData, datePatternMap);
+    const { expansionMap, subjectsRoomsMap } = useSubjectsData();
+    const events = useEventsData();
+    const holidays = useHolidaysData();
 
-    const {timetables, loadTimetable} = useTimetables();
-    const resolvedTimetables = useResolvedTimetables(timetables, datePatternMap);
+
     const [tableMode, setTableMode] = useState<"subjects" | "rooms" | "teachers">("subjects");
     
     const toggleTableMode = () => {
@@ -190,11 +190,6 @@ type TimetableOverrideRow = {
 
     useEffect(() => {
         if (!classNumber) return;
-        loadTimetable(classNumber);
-    }, [classNumber, loadTimetable]);
-
-    useEffect(() => {
-        if (!classNumber) return;
 
         const classData = resolvedTimetables?.[classNumber];
         if (!classData) return;
@@ -219,7 +214,7 @@ type TimetableOverrideRow = {
     useEffect(() => {
         if (!classNumber) return;
 
-        const classData = timetables?.[classNumber];
+        const classData = classPatternData?.[classNumber];
         if (!classData) return;
 
         const subjects =
@@ -231,7 +226,7 @@ type TimetableOverrideRow = {
                 return [...q, "subject"];
             });
         }
-    }, [classNumber, timetables]);
+    }, [classNumber, classPatternData]);
     
     useEffect(() => {
         const nextQueue = [];
@@ -251,19 +246,6 @@ type TimetableOverrideRow = {
         // subjects は Record<string,string> に変換
         const subjects = storage.selectedSubjects ?? {};
         setSubjectChoices(subjects);
-
-        /*
-        if (
-            Object.keys(subjects).length === 0 &&
-            classnum !== null
-        ) {
-            // timetable読み込み後に開く
-            setTimeout(() => {
-                setQueue((q) => [...q, "subject"]);
-            }, 0);
-        }
-        */
-
         setQueue(nextQueue);
     }, []);
 
@@ -333,7 +315,7 @@ type TimetableOverrideRow = {
                 timetables={resolvedTimetables}
                 subjectChoices={subjectChoices ?? {}}
                 expansionMap={expansionMap ?? {}}
-                subjectRoomsMap={subjectsRoomsMap ?? []}
+                subjectRoomsMap={subjectsRoomsMap ?? {}}
                 teacherMap={teacherMap ?? {}}
                 tableMode={tableMode}
                 filterSubject={filterSubject}
@@ -383,7 +365,7 @@ type TimetableOverrideRow = {
                 setClassNumber={setClassNumber}
             />
 
-            <SubjectSetupModal
+            <SubjectsSetupModal
                 open={current === "subject"}
                 onClose={() => setCurrent(null)}
                 expansionMap={expansionMap ?? {}}
