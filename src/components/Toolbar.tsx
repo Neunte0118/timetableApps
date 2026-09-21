@@ -5,7 +5,7 @@ import type { tableModeType } from "../types/type";
 type Props = {
     tableMode: tableModeType;
     toggleTableMode: () => void;
-    setIsFilterOpen: () => void;
+    setIsSearchOpen: () => void;
 };
 
 const DAY_LABELS = ["日", "月", "火", "水", "木", "金", "土"];
@@ -25,7 +25,7 @@ function formatNow(d: Date): string {
     return `${month}/${date}(${day}) ${hour}:${minutes}`;
 }
 
-export default function Toolbar({ tableMode, toggleTableMode, setIsFilterOpen }: Props) {
+export default function Toolbar({ tableMode, toggleTableMode, setIsSearchOpen }: Props) {
     const [now, setNow] = useState(() => formatNow(new Date()));
 
     // 表示中の現在時刻を1分ごとに更新する
@@ -45,8 +45,8 @@ export default function Toolbar({ tableMode, toggleTableMode, setIsFilterOpen }:
 
             <div className="now">{now}</div>
 
-            <button className="filter" onClick={setIsFilterOpen}>
-                フィルタ
+            <button className="search" onClick={setIsSearchOpen}>
+                検索
             </button>
         </div>
     );

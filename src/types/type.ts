@@ -42,6 +42,46 @@ export type TimetableOverrideRow = {
 };
 
 /**
+ * 講座変更（CSVフィード由来）を表す行。
+ */
+export type CourseOverrideRow = {
+    dates: string;
+    periods: string;
+    previous_course: string;
+    new_course: string;
+};
+
+/**
+ * 考査時間割を表す行。
+ */
+export type ExamTimetableRow = {
+    dates: string;
+    periods: string;
+    subjects: string;
+    start_time: string;
+    end_time: string;
+    classroom?: string;
+};
+
+/**
+ * 追加行事の1行。
+ */
+export type ExtraEventRow = {
+    dates: string;
+    contents: string;
+    light_color?: string;
+    dark_color?: string;
+};
+
+/**
+ * IndexedDB に保存されるメモデータ。
+ */
+export type MemoData = {
+    date: string;
+    text: string;
+};
+
+/**
  * 更新履歴CSVの1行。
  */
 export type UpdateInfoRow = {

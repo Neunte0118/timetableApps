@@ -4,6 +4,7 @@ import Toolbar from "./components/Toolbar";
 import Timetable from "./components/Timetable";
 import EventMemoBox from "./components/EventMemoBox";
 import Navbar from "./components/Navbar";
+import AndroidNoticeBanner from "./components/AndroidNoticeBanner";
 
 import { useModalQueue } from "./hooks/useModalQueue";
 
@@ -11,15 +12,16 @@ import TermModal from "./components/Modal/TermModal";
 import ClassSetupModal from "./components/Modal/ClassSetupModal";
 import SubjectsSetupModal from "./components/Modal/SubjectsSetupModal";
 import UpdateInfoModal from "./components/Modal/UpdateInfoModal";
-import FilterModal from "./components/Modal/FilterModal";
+import SearchModal from "./components/Modal/SearchModal";
 import SettingModal from "./components/Modal/SettingModal";
 import HtmlDocumentModal from "./components/Modal/HtmlDocumentModal";
+import AndroidAppModal from "./components/Modal/AndroidAppModal";
 
 import helpHtml from "./content/help.html?raw";
 import sourceHtml from "./content/source.html?raw";
 
 import { getStorage, setStorage } from "./utils/storage";
-import { addDays, startOfDay } from "./utils/date";
+import { addDays, diffInDays, formatMonthDayJa, startOfDay } from "./utils/date";
 
 import { useDatePatternMap } from "./hooks/useDatePatternMap";
 import { useClassPatternData } from "./hooks/useClassPatternData";
@@ -30,8 +32,46 @@ import { useSubjectsData } from "./hooks/useSubjectsData";
 import { useResolvedTimetables } from "./hooks/useResolvedTimetables";
 import { useCachedCSV } from "./hooks/useCachedCSV";
 
-import type { NestedRecord, TimetableOverrideRow, UpdateInfoRow, tableModeType } from "./types/type";
-import { UPDATE_INFO_URL, OVERRIDES_URL } from "./config/url";
+import type {
+    NestedRecord,
+    TimetableOverrideRow,
+    CourseOverrideRow,
+    ExtraEventRow,
+    ExamTimetableRow,
+    UpdateInfoRow,
+    tableModeType,
+} from "./types/type";
+import {
+    UPDATE_INFO_URL,
+    OVERRIDES_URL,
+    COURSE_OVERRIDES_URL,
+    EXTRA_EVENT_URL,
+    EXAM_TIMETABLE_URL,
+    EXAM_SUBJECT_MAPPING_URL,
+} from "./config/url";
+
+function parseExamMappingRows(rows: NestedRecord[]): Record<string, string> {
+    const mapping: Record<string, string> = {};
+    for (const row of rows) {
+        const source = typeof row.source === "string" ? row.source.trim() : "";
+        const target = typeof row.target === "string" ? row.target.trim() : "";
+        if (source && target) {
+            mapping[source] = target;
+        }
+    }
+    return mapping;
+}
+
+function parseExamRows(rows: NestedRecord[]): ExamTimetableRow[] {
+    return rows.map((row) => ({
+        dates: typeof row.dates === "string" ? row.dates.trim() : "",
+        periods: typeof row.periods === "string" ? row.periods.trim() : "",
+        subjects: typeof row.subjects === "string" ? row.subjects.trim() : "",
+        start_time: typeof row.start_time === "string" ? row.start_time.trim() : "",
+        end_time: typeof row.end_time === "string" ? row.end_time.trim() : "",
+        classroom: typeof row.classroom === "string" ? row.classroom.trim() : "-",
+    }));
+}
 
 function parseUpdateInfoRows(rows: NestedRecord[]): UpdateInfoRow[] {
     return rows.map((row) => ({
@@ -47,6 +87,24 @@ function parseOverrideRows(rows: NestedRecord[]): TimetableOverrideRow[] {
         classes: typeof row.classes === "string" ? row.classes : "",
         periods: typeof row.periods === "string" ? row.periods : "",
         subjects: typeof row.subjects === "string" ? row.subjects : "",
+    }));
+}
+
+function parseCourseOverrideRows(rows: NestedRecord[]): CourseOverrideRow[] {
+    return rows.map((row) => ({
+        dates: typeof row.dates === "string" ? row.dates.trim() : "",
+        periods: typeof row.periods === "string" ? row.periods.trim() : "",
+        previous_course: typeof row.previous_course === "string" ? row.previous_course.trim() : "",
+        new_course: typeof row.new_course === "string" ? row.new_course.trim() : "",
+    }));
+}
+
+function parseExtraEventRows(rows: NestedRecord[]): ExtraEventRow[] {
+    return rows.map((row) => ({
+        dates: typeof row.dates === "string" ? row.dates : "",
+        contents: typeof row.contents === "string" ? row.contents : "",
+        light_color: typeof row.light_color === "string" ? row.light_color : undefined,
+        dark_color: typeof row.dark_color === "string" ? row.dark_color : undefined,
     }));
 }
 
@@ -71,7 +129,7 @@ export default function HomePage({
     subjectChoices,
     setSubjectChoices,
 }: Props) {
-    const [filterSubject, setFilterSubject] = useState<string>();
+    const [highlightPeriod, setHighlightPeriod] = useState<{ dateKey: string; period: number } | null>(null);
     const [expansionClassMap, setExpansionClassMap] = useState<string[]>([]);
 
     const { setQueue, current, setCurrent } = useModalQueue();
@@ -93,6 +151,38 @@ export default function HomePage({
         fallback: () => [],
         errorLabel: "時間割変更（override）の読み込みに失敗しました",
     }) ?? [];
+
+    const courseOverrides = useCachedCSV<CourseOverrideRow[]>({
+        cacheKey: "courseOverrides",
+        url: COURSE_OVERRIDES_URL,
+        parse: parseCourseOverrideRows,
+        fallback: () => [],
+        errorLabel: "講座変更の読み込みに失敗しました",
+    }) ?? [];
+
+    const extraEvents = useCachedCSV<ExtraEventRow[]>({
+        cacheKey: "extraEvents",
+        url: EXTRA_EVENT_URL,
+        parse: parseExtraEventRows,
+        fallback: () => [],
+        errorLabel: "追加行事の読み込みに失敗しました",
+    }) ?? [];
+
+    const exams = useCachedCSV<ExamTimetableRow[]>({
+        cacheKey: "examTimetable",
+        url: EXAM_TIMETABLE_URL,
+        parse: parseExamRows,
+        fallback: () => [],
+        errorLabel: "考査時間割の読み込みに失敗しました",
+    }) ?? [];
+
+    const examMapping = useCachedCSV<Record<string, string>>({
+        cacheKey: "examSubjectMapping",
+        url: EXAM_SUBJECT_MAPPING_URL,
+        parse: parseExamMappingRows,
+        fallback: () => ({}),
+        errorLabel: "考査科目対応表の読み込みに失敗しました",
+    }) ?? {};
 
     const [baseDay, setBaseDay] = useState<Date>(() => startOfDay(new Date()));
     const [selectedOffset, setSelectedOffset] = useState<number>(0);
@@ -235,20 +325,41 @@ export default function HomePage({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const filterTargets = useMemo(
-        () =>
-            [...new Set(expansionClassMap.map((e) => subjectChoices?.[e] ?? e))].sort(),
-        [expansionClassMap, subjectChoices]
-    );
+    const handleSelectSearchDate = (targetDate: Date, period?: number) => {
+        const normalizedTarget = startOfDay(targetDate);
+        const daysDiff = diffInDays(normalizedTarget, baseDay);
+        const maxOffset = isSplit ? 4 + daysPerRow - 1 : daysPerRow - 1;
+
+        if (daysDiff >= 0 && daysDiff <= maxOffset) {
+            setSelectedOffset(daysDiff);
+        } else {
+            setBaseDay(normalizedTarget);
+            setSelectedOffset(0);
+        }
+
+        if (period !== undefined) {
+            const dateKey = formatMonthDayJa(normalizedTarget);
+            setHighlightPeriod({ dateKey, period });
+            window.setTimeout(() => {
+                setHighlightPeriod((prev) =>
+                    prev?.dateKey === dateKey && prev.period === period ? null : prev
+                );
+            }, 3500);
+        } else {
+            setHighlightPeriod(null);
+        }
+    };
 
     return (
         <>
             <h1 className="title">時間割アプリ</h1>
 
+            <AndroidNoticeBanner />
+
             <Toolbar
                 tableMode={tableMode}
                 toggleTableMode={toggleTableMode}
-                setIsFilterOpen={() => setQueue((q) => [...q, "filter"])}
+                setIsSearchOpen={() => setQueue((q) => [...q, "search"])}
             />
 
             <Timetable
@@ -263,9 +374,12 @@ export default function HomePage({
                 subjectRoomsMap={subjectsRoomsMap ?? {}}
                 teacherMap={teacherMap ?? {}}
                 tableMode={tableMode}
-                filterSubject={filterSubject}
                 holidays={holidays ?? {}}
                 overrides={overrides}
+                courseOverrides={courseOverrides}
+                exams={exams}
+                examMapping={examMapping}
+                highlightPeriod={highlightPeriod}
             />
 
             <EventMemoBox theme={theme} dayKey={day} plannedEvents={events ?? {}} />
@@ -329,12 +443,13 @@ export default function HomePage({
                 data={UpdateData ?? undefined}
             />
 
-            <FilterModal
-                open={current === "filter"}
+            <SearchModal
+                open={current === "search"}
                 onClose={() => setCurrent(null)}
-                filterSubject={filterSubject}
-                setFilterSubject={setFilterSubject}
-                options={filterTargets}
+                currentDay={day}
+                plannedEvents={events ?? {}}
+                extraEvents={extraEvents}
+                onSelectDate={handleSelectSearchDate}
             />
 
             <SettingModal
@@ -344,6 +459,11 @@ export default function HomePage({
                     setQueue((q) => [modalType, ...q]);
                     setCurrent(null);
                 }}
+            />
+
+            <AndroidAppModal
+                open={current === "androidApp"}
+                onClose={() => setCurrent(null)}
             />
         </>
     );

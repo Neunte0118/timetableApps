@@ -112,3 +112,24 @@ export function deleteData(
     };
   });
 }
+
+// 全データ取得
+export function getAllData<T>(
+  db: IDBDatabase,
+  storeName: string
+): Promise<T[]> {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readonly");
+    const store = tx.objectStore(storeName);
+
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+      resolve(request.result as T[]);
+    };
+
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
+}

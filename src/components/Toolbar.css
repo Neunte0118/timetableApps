@@ -2,48 +2,47 @@ select::-webkit-scrollbar {
     width: 0;
 }
 
-.toggle-moving-mode {
-    color: var(--selectable-color);
-    display: inline-block;
-    outline: none;
-    box-shadow: none;
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-}
-
-.toggle-moving-mode,
-.filter {
-    width: 80px;
-    text-align: center;
-}
-
-.toggle-moving-mode,
-.toolbar button {
-    height: 38px;
-    align-items: center;
-    margin-bottom: 4px;
-}
-
-/* 旧実装ではグローバルな <style>button{...}</style> をToolbar内に
-   インラインで挿入しており、アプリ全体のbuttonに影響していたため、
-   .toolbar 配下に限定して移植する */
-.toolbar button {
-    height: 32px;
-    width: 64px;
-}
-
 .toolbar {
     width: 90%;
     margin: 0 auto -6px;
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+.toolbar button,
+.toolbar select {
+    box-sizing: border-box;
+    height: 34px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--button-color);
+    color: var(--text-strong-color);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.toolbar .toggle-moving-mode {
+    outline: none;
+    box-shadow: none;
+    appearance: none;
+    -webkit-appearance: none;
+    width: auto;
+    min-width: 96px;
+    padding: 6px 14px;
+    text-align: center;
 }
 
 .now {
     flex: 1;
+    min-width: 0;
     text-align: center;
     font-weight: 600;
     color: var(--text-color);
@@ -51,18 +50,14 @@ select::-webkit-scrollbar {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-size: 0.95rem;
 }
 
-.toolbar .filter {
+.toolbar .search {
+    width: auto;
+    min-width: 60px;
+    padding: 6px 12px;
     margin-left: auto;
+    text-align: center;
 }
 
-.toolbar button,
-.toolbar select {
-    padding: 6px 10px;
-    background: var(--button-color);
-    color: var(--text-strong-color);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    cursor: pointer;
-}

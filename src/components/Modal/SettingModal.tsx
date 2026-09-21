@@ -23,6 +23,9 @@ export default function SettingModal({ open, onClose, onOpen }: Props) {
                 <button type="button" onClick={() => openAndClose("updateInfo")}>
                     更新履歴
                 </button>
+                <button type="button" onClick={() => openAndClose("androidApp")}>
+                    Android版アプリ
+                </button>
                 <button type="button" onClick={() => openAndClose("help")}>
                     ヘルプ
                 </button>

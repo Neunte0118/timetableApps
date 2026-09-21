@@ -1,0 +1,6 @@
+{
+  "name": "時間割アプリ",
+  "description": "選択科目に応じて時間割、移動教室、行事予定表を確認・検索できる時間割アプリ",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

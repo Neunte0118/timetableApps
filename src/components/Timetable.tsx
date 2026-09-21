@@ -1,6 +1,7 @@
 import "./Timetable.css";
-import type { tableModeType, TeacherMap, TimetableOverrideRow } from "../types/type";
+import type { tableModeType, TeacherMap, TimetableOverrideRow, CourseOverrideRow, ExamTimetableRow } from "../types/type";
 import { addDays, formatMonthDayJa, formatMonthDaySlash } from "../utils/date";
+import { resolveExamCell } from "../utils/examUtils";
 
 type Props = {
     classNumber: number | null;
@@ -14,9 +15,12 @@ type Props = {
     subjectRoomsMap: Record<string, string>;
     teacherMap: TeacherMap;
     tableMode: tableModeType;
-    filterSubject?: string;
     holidays: Record<string, string>;
     overrides?: TimetableOverrideRow[];
+    courseOverrides?: CourseOverrideRow[];
+    exams?: ExamTimetableRow[];
+    examMapping?: Record<string, string>;
+    highlightPeriod?: { dateKey: string; period: number } | null;
 };
 
 // HR担任（クラス番号は1始まり、配列インデックスは0始まり）
@@ -53,9 +57,12 @@ export default function Timetable({
     subjectRoomsMap,
     teacherMap,
     tableMode,
-    filterSubject,
     holidays,
     overrides,
+    courseOverrides,
+    exams,
+    examMapping,
+    highlightPeriod,
 }: Props) {
     const timetableData = classNumber ? timetables?.[classNumber] : undefined;
 
@@ -81,28 +88,6 @@ export default function Timetable({
         return undefined;
     };
 
-    const resolveCell = (code: string | undefined) => {
-        const original = code ?? "";
-        if (!original) {
-            return { display: "", subjectName: "" };
-        }
-
-        const isExpandable = Boolean(expansionMap?.[original]);
-        const subjectName = isExpandable ? (subjectChoices?.[original] ?? original) : original;
-
-        if (tableMode === "subjects") {
-            return { display: subjectName, subjectName };
-        }
-
-        if (tableMode === "rooms") {
-            if (!isExpandable) return { display: `${classNumber}組教室`, subjectName };
-            return { display: subjectRoomsMap?.[subjectName] ?? "?", subjectName };
-        }
-
-        // teachers
-        return { display: resolveTeacher(subjectName, original) ?? "", subjectName };
-    };
-
     const buildOffsets = (start: number, length: number) =>
         [...Array(length)].map((_, i) => start + i);
 
@@ -125,6 +110,22 @@ export default function Timetable({
         );
     };
 
+    const findCourseOverride = (
+        dateKey: string,
+        period: number,
+        currentCourse: string,
+        baseCode: string
+    ): CourseOverrideRow | undefined => {
+        if (!courseOverrides) return undefined;
+        return courseOverrides.find(
+            (c) =>
+                c.dates === dateKey &&
+                Number(c.periods) === period &&
+                ((currentCourse && c.previous_course === currentCourse) ||
+                 (baseCode && c.previous_course === baseCode))
+        );
+    };
+
     const hasOverrideForPeriod = (dateKey: string, period: number): boolean =>
         overrides?.some(
             (o) =>
@@ -133,11 +134,30 @@ export default function Timetable({
                 Number(o.periods) === period
         ) ?? false;
 
+    const hasCourseOverrideForPeriod = (dateKey: string, period: number): boolean => {
+        if (!courseOverrides || !timetableData) return false;
+        const raw = timetableData[dateKey]?.[period - 1] ?? "";
+        const override = findOverride(dateKey, period);
+        const baseCode = override?.subjects ?? raw;
+        if (!baseCode) return false;
+        const isExpandable = Boolean(expansionMap?.[baseCode]);
+        const currentCourse = isExpandable ? (subjectChoices?.[baseCode] ?? baseCode) : baseCode;
+        return Boolean(findCourseOverride(dateKey, period, currentCourse, baseCode));
+    };
+
+    const hasExamForPeriod = (dateKey: string, period: number): boolean =>
+        Boolean(exams?.some((e) => e.dates === dateKey && Number(e.periods) === period));
+
     const renderTable = (tableClassName: string, offsets: number[]) => {
         const hasSixthPeriod = offsets.some((offset) => {
             const dateKey = formatMonthDayJa(addDays(baseDay, offset));
             const hasTimetable6 = (timetableData?.[dateKey]?.length ?? 0) >= 6;
-            return hasTimetable6 || hasOverrideForPeriod(dateKey, 6);
+            return (
+                hasTimetable6 ||
+                hasOverrideForPeriod(dateKey, 6) ||
+                hasCourseOverrideForPeriod(dateKey, 6) ||
+                hasExamForPeriod(dateKey, 6)
+            );
         });
 
         const periods = hasSixthPeriod ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5];
@@ -184,23 +204,102 @@ export default function Timetable({
                             {offsets.map((offset) => {
                                 const date = addDays(baseDay, offset);
                                 const dateKey = formatMonthDayJa(date);
+
+                                const isSelected = offset === selectedOffset;
+                                const isHighlighted = Boolean(
+                                    highlightPeriod &&
+                                    highlightPeriod.dateKey === dateKey &&
+                                    highlightPeriod.period === period
+                                );
+
+                                // 考査セルの判定
+                                const examCell = resolveExamCell(
+                                    dateKey,
+                                    period,
+                                    exams,
+                                    subjectChoices,
+                                    examMapping
+                                );
+
+                                if (examCell) {
+                                    let display = examCell.displaySubject;
+                                    if (tableMode === "rooms") {
+                                        display = examCell.classroom && examCell.classroom !== "-"
+                                            ? examCell.classroom
+                                            : `${classNumber}組`;
+                                        display = display.replace(/([0-9０-９]+組)教室$/, "$1");
+                                    } else if (tableMode === "teachers") {
+                                        display = resolveTeacher(examCell.exam.subjects, examCell.exam.subjects) ?? "-";
+                                    }
+
+                                    const cellClassName = [
+                                        "subject",
+                                        "exam-cell",
+                                        examCell.isSelected ? "exam-purple" : "exam-unselected",
+                                        isSelected ? "subject-selected" : "",
+                                        isHighlighted ? "highlight-cell" : "",
+                                    ]
+                                        .filter(Boolean)
+                                        .join(" ");
+
+                                    return (
+                                        <td
+                                            key={`${offset}-${period}`}
+                                            className={cellClassName}
+                                            onClick={() => setSelectedOffset(offset)}
+                                        >
+                                            {examCell.startTime && (
+                                                <span className="exam-time exam-time-start">
+                                                    {examCell.startTime}
+                                                </span>
+                                            )}
+                                            <span className="exam-subject-title">{display || "\u00A0"}</span>
+                                            {examCell.endTime && (
+                                                <span className="exam-time exam-time-end">
+                                                    {examCell.endTime}
+                                                </span>
+                                            )}
+                                        </td>
+                                    );
+                                }
+
                                 const raw = timetableData?.[dateKey]?.[period - 1] ?? "";
                                 const override = findOverride(dateKey, period);
 
                                 const code = override?.subjects ?? raw;
-                                const { display, subjectName } = resolveCell(code);
+                                const isExpandable = Boolean(expansionMap?.[code]);
+                                const currentCourse = isExpandable ? (subjectChoices?.[code] ?? code) : code;
 
-                                const isChanged = Boolean(override);
-                                const isSelected = offset === selectedOffset;
-                                const hasFilter = Boolean(filterSubject);
-                                const isHit = hasFilter && subjectName === filterSubject;
-                                const isDim = hasFilter && !isHit && Boolean(subjectName);
+                                const courseOverride = (currentCourse || code)
+                                    ? findCourseOverride(dateKey, period, currentCourse, code)
+                                    : undefined;
+
+                                const effectiveSubject = courseOverride?.new_course ?? currentCourse;
+                                const isChanged = Boolean(override) || Boolean(courseOverride);
+
+                                let display = "";
+                                if (effectiveSubject) {
+                                    if (tableMode === "subjects") {
+                                        display = effectiveSubject;
+                                    } else if (tableMode === "rooms") {
+                                        if (courseOverride) {
+                                            display = subjectRoomsMap?.[effectiveSubject] ?? (isExpandable ? "?" : `${classNumber}組`);
+                                        } else if (!isExpandable) {
+                                            display = `${classNumber}組`;
+                                        } else {
+                                            display = subjectRoomsMap?.[effectiveSubject] ?? "?";
+                                        }
+                                        display = display.replace(/([0-9０-９]+組)教室$/, "$1");
+                                    } else {
+                                        // teachers
+                                        display = resolveTeacher(effectiveSubject, code) ?? "";
+                                    }
+                                }
 
                                 const cellClassName = [
                                     "subject",
                                     isSelected ? "subject-selected" : "",
-                                    isHit ? "filter-hit" : "",
-                                    isDim ? "filter-dim" : "",
+                                    isHighlighted ? "highlight-cell" : "",
                                     isChanged ? "timetable-changed" : "",
                                 ]
                                     .filter(Boolean)

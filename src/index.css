@@ -27,6 +27,7 @@
     --holiday-color: #c17d93;
     --filter-hit-color: #00FFFF;
     --timetable-changed-color: #ee7800;
+    --timetable-changed-bg: rgba(238, 120, 0, 0.28);
 }
 
 :root.theme-light {
@@ -55,6 +56,7 @@
     --holiday-color: #e25882;
     --filter-hit-color: #006a6c;
     --timetable-changed-color: #f8991c;
+    --timetable-changed-bg: rgba(248, 153, 28, 0.22);
 }
 
 html {
@@ -127,7 +129,7 @@ body.blocked {
 }
 
 .timetable-changed {
-    color: var(--timetable-changed-color);
+    background-color: var(--timetable-changed-bg);
 }
 
 /* =========================================================
