@@ -354,7 +354,7 @@ export default function HomePage({
         <>
             <h1 className="title">時間割アプリ</h1>
 
-            <AndroidNoticeBanner />
+            <AndroidNoticeBanner onOpenAndroidApp={() => setQueue((q) => ["androidApp", ...q])} />
 
             <Toolbar
                 tableMode={tableMode}
