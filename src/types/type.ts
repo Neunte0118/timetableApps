@@ -91,6 +91,15 @@ export type UpdateInfoRow = {
 };
 
 /**
+ * Android版アプリのリリース情報CSVの1行。
+ */
+export type AndroidReleaseRow = {
+    ver: string;
+    info: string;
+    link: string;
+};
+
+/**
  * 選択科目・教室名対応表から生成されるデータ。
  */
 export type ExpansionMap = Record<string, string[]>; // origin -> electives[]

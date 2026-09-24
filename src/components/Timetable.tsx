@@ -224,9 +224,12 @@ export default function Timetable({
                                 if (examCell) {
                                     let display = examCell.displaySubject;
                                     if (tableMode === "rooms") {
-                                        display = examCell.classroom && examCell.classroom !== "-"
-                                            ? examCell.classroom
-                                            : `${classNumber}組`;
+                                        const rawRoom = examCell.classroom?.trim();
+                                        if (!rawRoom || rawRoom === "-" || rawRoom === "$hr" || rawRoom === "__hr__") {
+                                            display = `${classNumber}組`;
+                                        } else {
+                                            display = rawRoom;
+                                        }
                                         display = display.replace(/([0-9０-９]+組)教室$/, "$1");
                                     } else if (tableMode === "teachers") {
                                         display = resolveTeacher(examCell.exam.subjects, examCell.exam.subjects) ?? "-";

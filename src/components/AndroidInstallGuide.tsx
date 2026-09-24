@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Download } from "lucide-react";
-import { ANDROID_APK_URL } from "@/config/url";
+import { useAndroidAppRelease } from "@/hooks/useAndroidAppRelease";
 
 type GuideItem = {
     id: string;
@@ -136,6 +136,8 @@ const GUIDES: GuideItem[] = [
 ];
 
 export default function AndroidInstallGuide() {
+    const { downloadUrl, latestVersion } = useAndroidAppRelease();
+
     // 選択中の機種（クリックでトグル）
     const [openBrandId, setOpenBrandId] = useState<string | null>(null);
 
@@ -157,14 +159,14 @@ export default function AndroidInstallGuide() {
             {/* ダウンロードボタン（共通） */}
             <div className="android-guide-download-box">
                 <a
-                    href={ANDROID_APK_URL}
+                    href={downloadUrl}
                     className="android-download-button"
                     target="_blank"
                     rel="noopener noreferrer"
                     download
                 >
                     <Download size={16} />
-                    ダウンロード
+                    ダウンロード {latestVersion ? `(v${latestVersion})` : ""}
                 </a>
             </div>
 

@@ -1,10 +1,13 @@
 import Modal from "../Modal";
 import type { ModalType } from "../../types/type";
 import AndroidInstallGuide from "../AndroidInstallGuide";
+import { useAndroidAppRelease } from "@/hooks/useAndroidAppRelease";
 
 type Props = ModalType;
 
 export default function AndroidAppModal({ open, onClose }: Props) {
+    const { latestVersion, latestInfo } = useAndroidAppRelease();
+
     return (
         <Modal open={open} onClose={onClose} title="Android版時間割アプリ" blocking={false}>
             <div style={{ textAlign: "left", fontSize: "13.5px", lineHeight: "1.6" }}>
@@ -14,6 +17,25 @@ export default function AndroidAppModal({ open, onClose }: Props) {
                     <br />
                     ※ほとんどAIによる開発のため、不具合が多発する恐れがあります
                 </p>
+
+                {latestVersion && latestInfo && (
+                    <div
+                        style={{
+                            marginBottom: "12px",
+                            padding: "8px 12px",
+                            borderRadius: "8px",
+                            background: "rgba(25, 47, 96, 0.08)",
+                            border: "1px solid var(--border-color)",
+                        }}
+                    >
+                        <div style={{ fontWeight: 700, marginBottom: "2px" }}>
+                            最新バージョン: v{latestVersion}
+                        </div>
+                        <div style={{ fontSize: "12.5px", whiteSpace: "pre-wrap", opacity: 0.9 }}>
+                            {latestInfo}
+                        </div>
+                    </div>
+                )}
 
                 <div style={{ marginBottom: "12px" }}>
                     <div style={{ fontWeight: 700, marginBottom: "4px" }}>新機能一覧：</div>
