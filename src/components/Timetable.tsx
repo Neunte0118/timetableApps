@@ -224,15 +224,31 @@ export default function Timetable({
                                 if (examCell) {
                                     let display = examCell.displaySubject;
                                     if (tableMode === "rooms") {
+                                        const formatSingleRoom = (roomStr: string) => {
+                                            const r = roomStr.trim();
+                                            if (!r || r === "-" || r === "$hr" || r === "__hr__") {
+                                                return `${classNumber}組`;
+                                            }
+                                            return r.replace(/([0-9０-９]+組)教室$/, "$1");
+                                        };
+
                                         const rawRoom = examCell.classroom?.trim();
-                                        if (!rawRoom || rawRoom === "-" || rawRoom === "$hr" || rawRoom === "__hr__") {
-                                            display = `${classNumber}組`;
+                                        if (rawRoom && rawRoom.includes("/")) {
+                                            const rooms = rawRoom.split("/").map(formatSingleRoom);
+                                            display = Array.from(new Set(rooms)).join("/");
                                         } else {
-                                            display = rawRoom;
+                                            display = formatSingleRoom(rawRoom || "");
                                         }
-                                        display = display.replace(/([0-9０-９]+組)教室$/, "$1");
                                     } else if (tableMode === "teachers") {
-                                        display = resolveTeacher(examCell.exam.subjects, examCell.exam.subjects) ?? "-";
+                                        if (examCell.allExams && examCell.allExams.length > 1) {
+                                            const teachers = examCell.allExams
+                                                .map((e) => resolveTeacher(e.subjects, e.subjects))
+                                                .filter(Boolean);
+                                            const uniqueTeachers = Array.from(new Set(teachers));
+                                            display = uniqueTeachers.length > 0 ? uniqueTeachers.join("/") : "-";
+                                        } else {
+                                            display = resolveTeacher(examCell.exam.subjects, examCell.exam.subjects) ?? "-";
+                                        }
                                     }
 
                                     const cellClassName = [
