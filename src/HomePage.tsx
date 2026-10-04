@@ -86,12 +86,28 @@ function parseExamRows(rows: NestedRecord[]): ExamTimetableRow[] {
     }));
 }
 
+const LOCAL_UPDATE_INFO_3_5_0: UpdateInfoRow = {
+    versions: "3.5.0",
+    dates: "2026/10/04",
+    contents:
+        "後期時間割（10月6日〜）の自動反映に対応\n" +
+        "選択科目の表示改善（A1の表示修正および選択肢の昇順並び替え）\n" +
+        "特別時程（短縮・追加時程など）の動的表示に対応\n" +
+        "授業前通知機能を廃止し、動作の軽量化・安定化\n" +
+        "テーマ切り替えアイコンの表示およびルートアクセスの改善",
+};
+
 function parseUpdateInfoRows(rows: NestedRecord[]): UpdateInfoRow[] {
-    return rows.map((row) => ({
-        versions: typeof row.versions === "string" ? row.versions : "",
-        dates: typeof row.dates === "string" ? row.dates : "",
-        contents: typeof row.contents === "string" ? row.contents : "",
+    const list: UpdateInfoRow[] = rows.map((row) => ({
+        versions: typeof row.versions === "string" ? row.versions.trim() : "",
+        dates: typeof row.dates === "string" ? row.dates.trim() : "",
+        contents: typeof row.contents === "string" ? row.contents.trim() : "",
     }));
+
+    if (!list.some((item) => item.versions === "3.5.0")) {
+        list.unshift(LOCAL_UPDATE_INFO_3_5_0);
+    }
+    return list;
 }
 
 function parseOverrideRows(rows: NestedRecord[]): TimetableOverrideRow[] {
@@ -153,7 +169,7 @@ export default function HomePage({
         cacheKey: "updateData",
         url: UPDATE_INFO_URL,
         parse: parseUpdateInfoRows,
-        fallback: () => [],
+        fallback: () => [LOCAL_UPDATE_INFO_3_5_0],
         errorLabel: "更新履歴の読み込みに失敗しました",
     });
 
