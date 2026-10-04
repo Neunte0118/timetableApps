@@ -10,9 +10,9 @@
 }
 
 .timetable table {
-    flex: 1;
+    flex: 1 1 auto;
     width: 90%;
-    margin: 8px auto;
+    margin: 6px auto;
 
     border-collapse: collapse;
     table-layout: fixed;
@@ -22,10 +22,41 @@
     overflow: hidden;
 
     box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    height: 100%;
+    max-height: 100%;
 }
 
-.timetable table {
-    flex: 1 1 auto;
+/* 特別時間割や多時限（6限等）のコンパクト表示 */
+.timetable table.timetable-compact {
+    margin: 3px auto;
+}
+
+.timetable table.timetable-compact th,
+.timetable table.timetable-compact td {
+    padding: 1px 0;
+}
+
+.timetable table.timetable-compact tbody th {
+    font-size: 0.88em;
+}
+
+.timetable table.timetable-compact td.subject {
+    font-size: 0.88em;
+}
+
+.timetable table.timetable-compact .exam-subject-title {
+    font-size: 0.92em;
+    line-height: 1.15;
+}
+
+.timetable table.timetable-compact .exam-time {
+    font-size: 7.5px;
+    letter-spacing: -0.3px;
+    top: 1px;
+}
+
+.timetable table.timetable-compact .exam-time-end {
+    bottom: 1px;
 }
 
 .timetable-2 {
@@ -147,9 +178,10 @@ body.use-split .timetable-2 {
    EXAM CELLS (考査)
 ========================================================= */
 
-.timetable td.exam-cell {
+.timetable td.exam-cell,
+.timetable td.has-special-time {
     position: relative;
-    padding: 2px 0;
+    padding: 1.5px 0;
     vertical-align: middle;
 }
 
@@ -177,13 +209,26 @@ body.use-split .timetable-2 {
     display: inline-block;
     max-width: 100%;
     word-break: break-all;
-    line-height: inherit;
+    line-height: 1.2;
     font-size: inherit;
     font-weight: normal;
 }
 
 .timetable td.highlight-cell .exam-subject-title {
     font-weight: 700;
+}
+
+/* 特別時程セル（時程変更・開始/終了時間表示、セルの色は通常色を維持） */
+
+:root.theme-light .timetable td.has-special-time .exam-time {
+    color: #64748b;
+    opacity: 0.9;
+}
+
+:root .timetable td.has-special-time .exam-time,
+:root.theme-dark .timetable td.has-special-time .exam-time {
+    color: #94a3b8;
+    opacity: 0.9;
 }
 
 /* 考査セル（紫色背景・テキスト色は通常色を維持） */

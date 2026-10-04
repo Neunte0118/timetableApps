@@ -36,6 +36,13 @@ export function useCachedCSV<T>({ cacheKey, url, parse, fallback, errorLabel }: 
                 setData(cached);
             }
 
+            if (!url) {
+                if (!cached && !cancelled) {
+                    setData(fallback());
+                }
+                return;
+            }
+
             try {
                 const rows = await fetchCSV(url);
                 const parsed = parse(rows);

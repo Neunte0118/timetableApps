@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { ClassTimetableData, Weekday } from "../types/type";
+import { isLaterSemester } from "../utils/date";
 
 type ParsedCode = {
     type: string;
@@ -10,7 +11,7 @@ type ParsedCode = {
 const isWeekday = (v: string): v is Weekday =>
     v === "月" || v === "火" || v === "水" || v === "木" || v === "金" || v === "土";
 
-function parsePatternCode(code: string): ParsedCode | null {
+export function parsePatternCode(code: string): ParsedCode | null {
     if (!code) return null;
 
     const match = code.match(/^(.+?)([月火水木金土])(\d+)$/);
@@ -30,7 +31,7 @@ function parsePatternCode(code: string): ParsedCode | null {
     };
 }
 
-function resolveCode(
+export function resolveCode(
     code: string,
     classData: ClassTimetableData | undefined
 ): string {
@@ -45,19 +46,31 @@ function resolveCode(
 }
 
 export function useResolvedTimetables(
-    classPatternData: Record<number, ClassTimetableData> | null | undefined,
+    earlierClassPatternData: Record<number, ClassTimetableData> | null | undefined,
+    laterClassPatternData: Record<number, ClassTimetableData> | null | undefined,
     datePatternMap: Record<string, string[]> | null | undefined
 ): Record<number, Record<string, string[]>> {
     return useMemo(() => {
-        if (!datePatternMap || !classPatternData) return {};
+        if (!datePatternMap || (!earlierClassPatternData && !laterClassPatternData)) return {};
 
         const result: Record<number, Record<string, string[]>> = {};
 
-        Object.entries(classPatternData).forEach(([classNoStr, classData]) => {
-            const classNo = Number(classNoStr);
+        const allClassNos = Array.from(
+            new Set([
+                ...Object.keys(earlierClassPatternData ?? {}).map(Number),
+                ...Object.keys(laterClassPatternData ?? {}).map(Number),
+            ])
+        );
+
+        allClassNos.forEach((classNo) => {
+            const earlierClass = earlierClassPatternData?.[classNo];
+            const laterClass = laterClassPatternData?.[classNo] ?? earlierClass;
             const resolvedForClass: Record<string, string[]> = {};
 
             Object.entries(datePatternMap).forEach(([dateKey, codes]) => {
+                const isLater = isLaterSemester(dateKey);
+                const classData = (isLater ? laterClass : earlierClass) ?? earlierClass ?? laterClass;
+
                 resolvedForClass[dateKey] = (codes ?? []).map((code) =>
                     resolveCode(code, classData)
                 );
@@ -67,5 +80,5 @@ export function useResolvedTimetables(
         });
 
         return result;
-    }, [classPatternData, datePatternMap]);
+    }, [earlierClassPatternData, laterClassPatternData, datePatternMap]);
 }

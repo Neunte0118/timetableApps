@@ -1,7 +1,16 @@
 import "./Timetable.css";
-import type { tableModeType, TeacherMap, TimetableOverrideRow, CourseOverrideRow, ExamTimetableRow } from "../types/type";
-import { addDays, formatMonthDayJa, formatMonthDaySlash } from "../utils/date";
+import type {
+    tableModeType,
+    TeacherMap,
+    TimetableOverrideRow,
+    CourseOverrideRow,
+    ExamTimetableRow,
+    SpecialScheduleRow,
+    ClassTimetableData,
+} from "../types/type";
+import { addDays, formatMonthDayJa, formatMonthDaySlash, normalizeDateKey, isLaterSemester } from "../utils/date";
 import { resolveExamCell } from "../utils/examUtils";
+import { resolveCode } from "../hooks/useResolvedTimetables";
 
 type Props = {
     classNumber: number | null;
@@ -21,6 +30,10 @@ type Props = {
     exams?: ExamTimetableRow[];
     examMapping?: Record<string, string>;
     highlightPeriod?: { dateKey: string; period: number } | null;
+    specialSchedules?: SpecialScheduleRow[];
+    earlierClassPatternData?: Record<number, ClassTimetableData> | null;
+    laterClassPatternData?: Record<number, ClassTimetableData> | null;
+    classPatternData?: Record<number, ClassTimetableData> | null;
 };
 
 // HR担任（クラス番号は1始まり、配列インデックスは0始まり）
@@ -63,8 +76,30 @@ export default function Timetable({
     exams,
     examMapping,
     highlightPeriod,
+    specialSchedules,
+    earlierClassPatternData,
+    laterClassPatternData,
+    classPatternData,
 }: Props) {
     const timetableData = classNumber ? timetables?.[classNumber] : undefined;
+
+    const getClassDataForDate = (dateKey: string): ClassTimetableData | undefined => {
+        if (!classNumber) return undefined;
+        const isLater = isLaterSemester(dateKey);
+        const map = (isLater ? laterClassPatternData : earlierClassPatternData)
+            ?? earlierClassPatternData
+            ?? laterClassPatternData
+            ?? classPatternData;
+        return map?.[classNumber];
+    };
+
+    const findSpecialSchedule = (dateKey: string, period: number): SpecialScheduleRow | undefined => {
+        if (!specialSchedules || specialSchedules.length === 0) return undefined;
+        return specialSchedules.find((s) => {
+            const d = normalizeDateKey(s.date);
+            return (d === dateKey || s.date.trim() === dateKey) && Number(s.period) === period;
+        });
+    };
 
     const resolveTeacher = (subjectName: string, originalCode: string): string | undefined => {
         if (subjectName === "HR") {
@@ -126,44 +161,68 @@ export default function Timetable({
         );
     };
 
-    const hasOverrideForPeriod = (dateKey: string, period: number): boolean =>
-        overrides?.some(
-            (o) =>
-                o.dates === dateKey &&
-                (o.classes === "0" || Number(o.classes) === classNumber) &&
-                Number(o.periods) === period
-        ) ?? false;
-
-    const hasCourseOverrideForPeriod = (dateKey: string, period: number): boolean => {
-        if (!courseOverrides || !timetableData) return false;
-        const raw = timetableData[dateKey]?.[period - 1] ?? "";
-        const override = findOverride(dateKey, period);
-        const baseCode = override?.subjects ?? raw;
-        if (!baseCode) return false;
-        const isExpandable = Boolean(expansionMap?.[baseCode]);
-        const currentCourse = isExpandable ? (subjectChoices?.[baseCode] ?? baseCode) : baseCode;
-        return Boolean(findCourseOverride(dateKey, period, currentCourse, baseCode));
-    };
-
-    const hasExamForPeriod = (dateKey: string, period: number): boolean =>
-        Boolean(exams?.some((e) => e.dates === dateKey && Number(e.periods) === period));
-
     const renderTable = (tableClassName: string, offsets: number[]) => {
-        const hasSixthPeriod = offsets.some((offset) => {
+        // 5限以上（6限、7限...）が追加されても動的に反映
+        let maxPeriod = 5;
+
+        offsets.forEach((offset) => {
             const dateKey = formatMonthDayJa(addDays(baseDay, offset));
-            const hasTimetable6 = (timetableData?.[dateKey]?.length ?? 0) >= 6;
-            return (
-                hasTimetable6 ||
-                hasOverrideForPeriod(dateKey, 6) ||
-                hasCourseOverrideForPeriod(dateKey, 6) ||
-                hasExamForPeriod(dateKey, 6)
-            );
+            const ttLength = timetableData?.[dateKey]?.length ?? 0;
+            if (ttLength > maxPeriod) maxPeriod = ttLength;
+
+            overrides?.forEach((o) => {
+                if (
+                    o.dates === dateKey &&
+                    (o.classes === "0" || Number(o.classes) === classNumber)
+                ) {
+                    const p = Number(o.periods);
+                    if (Number.isFinite(p) && p > maxPeriod) maxPeriod = p;
+                }
+            });
+
+            courseOverrides?.forEach((c) => {
+                if (c.dates === dateKey) {
+                    const p = Number(c.periods);
+                    if (Number.isFinite(p) && p > maxPeriod) maxPeriod = p;
+                }
+            });
+
+            exams?.forEach((e) => {
+                if (e.dates === dateKey) {
+                    const p = Number(e.periods);
+                    if (Number.isFinite(p) && p > maxPeriod) maxPeriod = p;
+                }
+            });
+
+            specialSchedules?.forEach((s) => {
+                const d = normalizeDateKey(s.date);
+                if (d === dateKey || s.date.trim() === dateKey) {
+                    const p = Number(s.period);
+                    if (Number.isFinite(p) && p > maxPeriod) maxPeriod = p;
+                }
+            });
         });
 
-        const periods = hasSixthPeriod ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5];
+        const periods = Array.from({ length: maxPeriod }, (_, i) => i + 1);
+
+        const hasSpecialSchedule = offsets.some((offset) => {
+            const dateKey = formatMonthDayJa(addDays(baseDay, offset));
+            return specialSchedules?.some((s) => {
+                const d = normalizeDateKey(s.date);
+                return d === dateKey || s.date.trim() === dateKey;
+            });
+        });
+
+        const isCompact = maxPeriod >= 6 || hasSpecialSchedule;
+        const tableClasses = [
+            tableClassName,
+            isCompact ? "timetable-compact" : "",
+        ]
+            .filter(Boolean)
+            .join(" ");
 
         return (
-            <table className={tableClassName}>
+            <table className={tableClasses}>
                 <thead>
                     <tr>
                         <th className="toggle-header">{classNumber}組</th>
@@ -282,7 +341,14 @@ export default function Timetable({
                                     );
                                 }
 
-                                const raw = timetableData?.[dateKey]?.[period - 1] ?? "";
+                                const specialSchedule = findSpecialSchedule(dateKey, period);
+                                const cellClassData = getClassDataForDate(dateKey);
+                                const rawSpecial = specialSchedule
+                                    ? (cellClassData
+                                          ? resolveCode(specialSchedule.subject.trim(), cellClassData) || specialSchedule.subject.trim()
+                                          : specialSchedule.subject.trim())
+                                    : "";
+                                const raw = rawSpecial || (timetableData?.[dateKey]?.[period - 1] ?? "");
                                 const override = findOverride(dateKey, period);
 
                                 const code = override?.subjects ?? raw;
@@ -315,8 +381,17 @@ export default function Timetable({
                                     }
                                 }
 
+                                const startTime = specialSchedule?.start_time?.trim() && specialSchedule.start_time.trim() !== "-"
+                                    ? specialSchedule.start_time.trim()
+                                    : "";
+                                const endTime = specialSchedule?.end_time?.trim() && specialSchedule.end_time.trim() !== "-"
+                                    ? specialSchedule.end_time.trim()
+                                    : "";
+                                const hasSpecialTime = Boolean(startTime || endTime);
+
                                 const cellClassName = [
                                     "subject",
+                                    hasSpecialTime ? "has-special-time exam-cell" : "",
                                     isSelected ? "subject-selected" : "",
                                     isHighlighted ? "highlight-cell" : "",
                                     isChanged ? "timetable-changed" : "",
@@ -330,7 +405,17 @@ export default function Timetable({
                                         className={cellClassName}
                                         onClick={() => setSelectedOffset(offset)}
                                     >
-                                        {display}
+                                        {startTime && (
+                                            <span className="exam-time exam-time-start">
+                                                {startTime}
+                                            </span>
+                                        )}
+                                        <span className="exam-subject-title">{display || "\u00A0"}</span>
+                                        {endTime && (
+                                            <span className="exam-time exam-time-end">
+                                                {endTime}
+                                            </span>
+                                        )}
                                     </td>
                                 );
                             })}

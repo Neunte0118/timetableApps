@@ -1,7 +1,9 @@
 import { addDays, daysInMonth } from "../utils/date";
 import "./Navbar.css";
 
-const base = import.meta.env.BASE_URL;
+const baseUrl = import.meta.env.BASE_URL.endsWith("/")
+    ? import.meta.env.BASE_URL
+    : `${import.meta.env.BASE_URL}/`;
 
 type Props = {
     day: Date;
@@ -50,7 +52,7 @@ export default function Navbar({
             <div className="nav-bar-2">
                 <button className="theme-btn" type="button" onClick={toggleTheme}>
                     <img
-                        src={theme === "dark" ? `${base}/images/moon-dark.svg` : `${base}/images/sun-light.svg`}
+                        src={theme === "dark" ? `${baseUrl}images/moon-dark.svg` : `${baseUrl}images/sun-light.svg`}
                         alt={theme === "dark" ? "ダークモード" : "ライトモード"}
                         style={{ width: "20px", height: "20px", display: "block", margin: "0 auto" }}
                     />

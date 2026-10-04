@@ -1,14 +1,16 @@
 import { useCachedCSV } from "./useCachedCSV";
 import type { NestedRecord, ClassTimetableData, Weekday } from "../types/type";
-import { CLASS_PATTERN_URL } from "@/config/url";
+import { CLASS_PATTERN_URL, LATER_CLASS_PATTERN_URL } from "@/config/url";
 
-const PERIOD_COLUMNS = [
+const PERIOD_KEYS = [
     "first_period",
     "second_period",
     "third_period",
     "fourth_period",
     "fifth_period",
     "sixth_period",
+    "seventh_period",
+    "eighth_period",
 ];
 
 const isWeekday = (v: string): v is Weekday =>
@@ -24,8 +26,14 @@ function parseRows(rows: NestedRecord[]): Record<number, ClassTimetableData> {
 
         if (!Number.isFinite(classNo) || !type || !isWeekday(dayRaw)) return;
 
-        const hasSixth = Object.prototype.hasOwnProperty.call(row, "sixth_period");
-        const columns = hasSixth ? PERIOD_COLUMNS : PERIOD_COLUMNS.slice(0, 5);
+        // 5限以上（6限、7限...）が追加されても動的に反映
+        let maxIndex = 4; // 少なくとも1〜5限
+        for (let i = 5; i < PERIOD_KEYS.length; i++) {
+            if (Object.prototype.hasOwnProperty.call(row, PERIOD_KEYS[i])) {
+                maxIndex = i;
+            }
+        }
+        const columns = PERIOD_KEYS.slice(0, maxIndex + 1);
 
         const subjects = columns.map((key) =>
             typeof row[key] === "string" ? (row[key] as string).trim() : ""
@@ -46,6 +54,16 @@ export function useClassPatternData() {
         url: CLASS_PATTERN_URL,
         parse: parseRows,
         fallback: () => ({}),
-        errorLabel: "時間割パターン表の読み込みに失敗しました",
+        errorLabel: "前期時間割パターン表の読み込みに失敗しました",
+    });
+}
+
+export function useLaterClassPatternData() {
+    return useCachedCSV<Record<number, ClassTimetableData>>({
+        cacheKey: "laterClassPatternData",
+        url: LATER_CLASS_PATTERN_URL,
+        parse: parseRows,
+        fallback: () => ({}),
+        errorLabel: "後期時間割パターン表の読み込みに失敗しました",
     });
 }

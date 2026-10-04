@@ -24,7 +24,7 @@ import { getStorage, setStorage } from "./utils/storage";
 import { addDays, diffInDays, formatMonthDayJa, startOfDay } from "./utils/date";
 
 import { useDatePatternMap } from "./hooks/useDatePatternMap";
-import { useClassPatternData } from "./hooks/useClassPatternData";
+import { useClassPatternData, useLaterClassPatternData } from "./hooks/useClassPatternData";
 import { useEventsData } from "./hooks/useEventsData";
 import { useHolidaysData } from "./hooks/useHolidaysData";
 import { useStaticData } from "./hooks/useStaticData";
@@ -38,6 +38,7 @@ import type {
     CourseOverrideRow,
     ExtraEventRow,
     ExamTimetableRow,
+    SpecialScheduleRow,
     UpdateInfoRow,
     tableModeType,
 } from "./types/type";
@@ -48,7 +49,19 @@ import {
     EXTRA_EVENT_URL,
     EXAM_TIMETABLE_URL,
     EXAM_SUBJECT_MAPPING_URL,
+    SPECIAL_SCHEDULE_URL,
 } from "./config/url";
+import { resolveCode } from "./hooks/useResolvedTimetables";
+
+function parseSpecialScheduleRows(rows: NestedRecord[]): SpecialScheduleRow[] {
+    return rows.map((row) => ({
+        date: typeof row.date === "string" ? row.date.trim() : (typeof row.dates === "string" ? row.dates.trim() : ""),
+        period: typeof row.period === "string" ? row.period.trim() : (typeof row.periods === "string" ? row.periods.trim() : ""),
+        subject: typeof row.subject === "string" ? row.subject.trim() : (typeof row.subjects === "string" ? row.subjects.trim() : ""),
+        start_time: typeof row.start_time === "string" ? row.start_time.trim() : "",
+        end_time: typeof row.end_time === "string" ? row.end_time.trim() : "",
+    }));
+}
 
 function parseExamMappingRows(rows: NestedRecord[]): Record<string, string> {
     const mapping: Record<string, string> = {};
@@ -144,13 +157,14 @@ export default function HomePage({
         errorLabel: "更新履歴の読み込みに失敗しました",
     });
 
-    const overrides = useCachedCSV<TimetableOverrideRow[]>({
+    const overridesRaw = useCachedCSV<TimetableOverrideRow[]>({
         cacheKey: "overrides",
         url: OVERRIDES_URL,
         parse: parseOverrideRows,
         fallback: () => [],
         errorLabel: "時間割変更（override）の読み込みに失敗しました",
-    }) ?? [];
+    });
+    const overrides = useMemo(() => overridesRaw ?? [], [overridesRaw]);
 
     const courseOverrides = useCachedCSV<CourseOverrideRow[]>({
         cacheKey: "courseOverrides",
@@ -184,13 +198,27 @@ export default function HomePage({
         errorLabel: "考査科目対応表の読み込みに失敗しました",
     }) ?? {};
 
+    const specialSchedulesRaw = useCachedCSV<SpecialScheduleRow[]>({
+        cacheKey: "specialSchedules",
+        url: SPECIAL_SCHEDULE_URL,
+        parse: parseSpecialScheduleRows,
+        fallback: () => [],
+        errorLabel: "特別時程の読み込みに失敗しました",
+    });
+    const specialSchedules = useMemo(() => specialSchedulesRaw ?? [], [specialSchedulesRaw]);
+
     const [baseDay, setBaseDay] = useState<Date>(() => startOfDay(new Date()));
     const [selectedOffset, setSelectedOffset] = useState<number>(0);
 
     const day = useMemo(() => addDays(baseDay, selectedOffset), [baseDay, selectedOffset]);
     const datePatternMap = useDatePatternMap();
     const classPatternData = useClassPatternData();
-    const resolvedTimetables = useResolvedTimetables(classPatternData, datePatternMap);
+    const laterClassPatternData = useLaterClassPatternData();
+    const resolvedTimetables = useResolvedTimetables(
+        classPatternData,
+        laterClassPatternData,
+        datePatternMap
+    );
     const { expansionMap, subjectsRoomsMap } = useSubjectsData();
     const events = useEventsData();
     const holidays = useHolidaysData();
@@ -265,9 +293,8 @@ export default function HomePage({
     }, [classNumber]);
 
     // クラスの時間割から実際に登場する選択科目コード一覧を算出する。
-    // classData が未ロードでも classNumber は変わりうるため、
-    // 「対象データがまだ無い」場合は空配列で確定させ、
-    // SubjectsSetupModal 側の「読み込み中」表示と矛盾しないようにする。
+    // クラスパターン（前期・後期）、日付解決済み時間割、特別時程、時間割変更から
+    // 該当クラスで登場するすべての科目を抽出し、自然順（昇順）ソートする。
     useEffect(() => {
         if (!classNumber) {
             setExpansionClassMap([]);
@@ -275,16 +302,59 @@ export default function HomePage({
         }
 
         const classData = resolvedTimetables?.[classNumber];
+        const classPattern = classPatternData?.[classNumber];
+        const laterClass = laterClassPatternData?.[classNumber];
 
-        const allSubjects = classData
-            ? [
-                  ...new Set(
-                      Object.values(classData)
-                          .flat()
-                          .filter((v): v is string => typeof v === "string" && v !== "")
-                  ),
-              ].sort()
+        const patternSubjects: string[] = [];
+        if (classPattern) {
+            Object.values(classPattern).forEach((week) => {
+                Object.values(week).forEach((periods) => {
+                    periods?.forEach((s) => {
+                        if (s && typeof s === "string") patternSubjects.push(s.trim());
+                    });
+                });
+            });
+        }
+        if (laterClass) {
+            Object.values(laterClass).forEach((week) => {
+                Object.values(week).forEach((periods) => {
+                    periods?.forEach((s) => {
+                        if (s && typeof s === "string") patternSubjects.push(s.trim());
+                    });
+                });
+            });
+        }
+
+        const classTimetableSubjects = classData
+            ? Object.values(classData)
+                  .flat()
+                  .filter((v): v is string => typeof v === "string" && v !== "")
             : [];
+
+        const specialSubjects = specialSchedules
+            .map((s) => {
+                const pat = s.subject.trim();
+                return (
+                    (classPattern ? resolveCode(pat, classPattern) : "") ||
+                    (laterClass ? resolveCode(pat, laterClass) : "") ||
+                    pat
+                );
+            })
+            .filter((v): v is string => Boolean(v));
+
+        const overrideSubjects = (overrides ?? [])
+            .filter((o) => o.classes === "0" || Number(o.classes) === classNumber)
+            .map((o) => o.subjects.trim())
+            .filter(Boolean);
+
+        const allSubjects = [
+            ...new Set([
+                ...patternSubjects,
+                ...classTimetableSubjects,
+                ...specialSubjects,
+                ...overrideSubjects,
+            ]),
+        ].sort((a, b) => a.localeCompare(b, "ja", { numeric: true }));
 
         setExpansionClassMap((prev) => {
             if (JSON.stringify(prev) === JSON.stringify(allSubjects)) {
@@ -292,12 +362,19 @@ export default function HomePage({
             }
             return allSubjects;
         });
-    }, [resolvedTimetables, classNumber]);
+    }, [
+        resolvedTimetables,
+        classNumber,
+        classPatternData,
+        laterClassPatternData,
+        specialSchedules,
+        overrides,
+    ]);
 
     useEffect(() => {
         if (!classNumber) return;
 
-        const classData = classPatternData?.[classNumber];
+        const classData = classPatternData?.[classNumber] ?? laterClassPatternData?.[classNumber];
         if (!classData) return;
 
         const subjects = getStorage<Record<string, string>>("subjectChoices") ?? {};
@@ -305,7 +382,7 @@ export default function HomePage({
         if (Object.keys(subjects).length === 0) {
             setQueue((q) => (q.includes("subject") ? q : [...q, "subject"]));
         }
-    }, [classNumber, classPatternData, setQueue]);
+    }, [classNumber, classPatternData, laterClassPatternData, setQueue]);
 
     // 初回マウント時：利用規約同意・クラス・選択科目をローカルストレージから復元
     useEffect(() => {
@@ -380,6 +457,10 @@ export default function HomePage({
                 exams={exams}
                 examMapping={examMapping}
                 highlightPeriod={highlightPeriod}
+                specialSchedules={specialSchedules}
+                earlierClassPatternData={classPatternData}
+                laterClassPatternData={laterClassPatternData}
+                classPatternData={classPatternData}
             />
 
             <EventMemoBox theme={theme} dayKey={day} plannedEvents={events ?? {}} />

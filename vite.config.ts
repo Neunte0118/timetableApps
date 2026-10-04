@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from "path";
 
 export default defineConfig({
-  base: '/tools/timetableApps/',
+  base: '/',
 
   plugins: [
     react(),
@@ -15,7 +15,7 @@ export default defineConfig({
         name: '時間割アプリ',
         short_name: '時間割',
         description: '時間割アプリ',
-        start_url: '/tools/timetableApps/',
+        start_url: '/',
         scope: '/',
         theme_color: "#192F60",
         background_color: '#ffffff',
@@ -43,7 +43,7 @@ export default defineConfig({
       },
 
       devOptions: {
-        enabled: true,
+        enabled: false,
       },
     }),
   ],
@@ -55,8 +55,8 @@ export default defineConfig({
   },
 
   server: {
-    port: 5173,
-    open: true,
+    port: 3000,
+    host: true,
   },
 
   build: {

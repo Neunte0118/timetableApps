@@ -4,7 +4,9 @@ import { logger } from "../utils/logger";
 import type { TeacherMap } from "../types/type";
 
 const log = logger.scope("useStaticData");
-const base = import.meta.env.BASE_URL;
+const baseUrl = import.meta.env.BASE_URL.endsWith("/")
+    ? import.meta.env.BASE_URL
+    : `${import.meta.env.BASE_URL}/`;
 
 type StaticData = {
     teacherMap: TeacherMap | null;
@@ -25,7 +27,7 @@ export function useStaticData() {
         const load = async () => {
             try {
                 const [teacherMap] = await Promise.all([
-                    fetchJSON<TeacherMap>(`${base}/data/teacher.json`),
+                    fetchJSON<TeacherMap>(`${baseUrl}data/teacher.json`),
                 ]);
 
                 if (cancelled) return;

@@ -30,12 +30,12 @@ export default function SubjectsSetupModal({
     const isLoadingExpansionMap = expansionKeys.length === 0;
     const isWaitingTimetable = !isLoadingExpansionMap && (expansionClassMap?.length ?? 0) === 0;
 
-    // このクラスの時間割から実際に登場した選択科目（origin）だけを対象にする。
-    // ロード中（isWaitingTimetable）は、まだクラス固有の科目が判明していないため
-    // 全選択科目にフォールバックせず、空のまま「読み込み中」表示に委ねる。
+    // このクラスの時間割から実際に登場した選択科目（origin）だけを対象にし、昇順ソートする。
     const targets = isWaitingTimetable
         ? []
-        : (expansionClassMap ?? []).filter((v) => keySet.has(v));
+        : (expansionClassMap ?? [])
+              .filter((v) => keySet.has(v))
+              .sort((a, b) => a.localeCompare(b, "ja", { numeric: true }));
 
     const isReady = !isLoadingExpansionMap && !isWaitingTimetable;
 
@@ -55,24 +55,29 @@ export default function SubjectsSetupModal({
                 )}
 
                 {isReady &&
-                    targets.map((v) => (
-                        <label className="subject-row" key={v}>
-                            <span className="subject-code">{v}</span>
+                    targets.map((v) => {
+                        const options = [...(expansionMap[v] ?? [])].sort((a, b) =>
+                            a.localeCompare(b, "ja", { numeric: true })
+                        );
+                        return (
+                            <label className="subject-row" key={v}>
+                                <span className="subject-code">{v}</span>
 
-                            <select
-                                value={subjectChoices[v] ?? ""}
-                                onChange={(e) => handleChange(v, e.target.value)}
-                            >
-                                <option value="">未選択</option>
+                                <select
+                                    value={subjectChoices[v] ?? ""}
+                                    onChange={(e) => handleChange(v, e.target.value)}
+                                >
+                                    <option value="">未選択</option>
 
-                                {expansionMap[v]?.map((value) => (
-                                    <option key={value} value={value}>
-                                        {value}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-                    ))}
+                                    {options.map((value) => (
+                                        <option key={value} value={value}>
+                                            {value}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                        );
+                    })}
 
                 <div className="subject-actions">
                     <button className="close-modal" onClick={onClose}>

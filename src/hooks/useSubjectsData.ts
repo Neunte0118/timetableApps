@@ -28,6 +28,10 @@ function parseRows(rows: NestedRecord[]): SubjectsData {
         }
     });
 
+    Object.keys(expansionMap).forEach((origin) => {
+        expansionMap[origin].sort((a, b) => a.localeCompare(b, "ja", { numeric: true }));
+    });
+
     return { expansionMap, subjectsRoomsMap };
 }
 

@@ -1,7 +1,9 @@
 // 共通時間割コード
 export const DATE_PATTERN_MAP_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSizltFHoOWYdi97m2q_x21-XHwaeeMTzbUk0jlWCZRAD-CmsGn9uKZQMe2rHbIxP7_pEekWK84yf9/pub?gid=598100052&single=true&output=csv";
-// クラス別時間割
+// クラス別時間割 (前期)
 export const CLASS_PATTERN_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSizltFHoOWYdi97m2q_x21-XHwaeeMTzbUk0jlWCZRAD-CmsGn9uKZQMe2rHbIxP7_pEekWK84yf9/pub?gid=886789577&single=true&output=csv";
+// クラス別時間割 (後期：10月6日〜)
+export const LATER_CLASS_PATTERN_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSizltFHoOWYdi97m2q_x21-XHwaeeMTzbUk0jlWCZRAD-CmsGn9uKZQMe2rHbIxP7_pEekWK84yf9/pub?gid=763994660&single=true&output=csv";
 // 時間割変更（オーバーライド）
 export const OVERRIDES_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSizltFHoOWYdi97m2q_x21-XHwaeeMTzbUk0jlWCZRAD-CmsGn9uKZQMe2rHbIxP7_pEekWK84yf9/pub?gid=963151426&single=true&output=csv";
 // 講座変更
@@ -28,3 +30,5 @@ export const ANDROID_RELEASES_URL = "https://docs.google.com/spreadsheets/d/e/2P
 export const EXAM_TIMETABLE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSizltFHoOWYdi97m2q_x21-XHwaeeMTzbUk0jlWCZRAD-CmsGn9uKZQMe2rHbIxP7_pEekWK84yf9/pub?gid=436772895&single=true&output=csv";
 // 考査科目対応表
 export const EXAM_SUBJECT_MAPPING_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSizltFHoOWYdi97m2q_x21-XHwaeeMTzbUk0jlWCZRAD-CmsGn9uKZQMe2rHbIxP7_pEekWK84yf9/pub?gid=1612164498&single=true&output=csv";
+// 特別時程（時程変更・特別時間割）
+export const SPECIAL_SCHEDULE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSizltFHoOWYdi97m2q_x21-XHwaeeMTzbUk0jlWCZRAD-CmsGn9uKZQMe2rHbIxP7_pEekWK84yf9/pub?gid=2041839281&single=true&output=csv";

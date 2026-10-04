@@ -15,20 +15,32 @@ export default function App() {
     const [classNumber, setClassNumber] = useState<number | null>(getStorage("classNumber") ?? null);
     const [subjectChoices, setSubjectChoices] = useState<Record<string, string> | null>(getStorage("subjectChoices"));
 
+    const homeElement = (
+        <HomePage
+            theme={theme}
+            toggleTheme={toggleTheme}
+            isTermAccepted={isTermAccepted}
+            setIsTermAccepted={setIsTermAccepted}
+            classNumber={classNumber}
+            setClassNumber={setClassNumber}
+            subjectChoices={subjectChoices}
+            setSubjectChoices={setSubjectChoices}
+        />
+    );
+
     return (
         <Routes>
+            <Route path="/" element={homeElement} />
+            <Route path="/tools/timetableApps/" element={homeElement} />
+
             <Route
-                path="/tools/timetableApps/"
+                path="/exam/:examTableId"
                 element={
-                    <HomePage
+                    <ExamTable
                         theme={theme}
-                        toggleTheme={toggleTheme}
                         isTermAccepted={isTermAccepted}
-                        setIsTermAccepted={setIsTermAccepted}
                         classNumber={classNumber}
-                        setClassNumber={setClassNumber}
                         subjectChoices={subjectChoices}
-                        setSubjectChoices={setSubjectChoices}
                     />
                 }
             />
@@ -44,6 +56,8 @@ export default function App() {
                     />
                 }
             />
+
+            <Route path="*" element={homeElement} />
         </Routes>
     );
 }

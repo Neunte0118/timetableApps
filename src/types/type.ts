@@ -64,6 +64,17 @@ export type ExamTimetableRow = {
 };
 
 /**
+ * 特別時程（時程がいつもと違う時間割）を表す行。
+ */
+export type SpecialScheduleRow = {
+    date: string;
+    period: string;
+    subject: string;
+    start_time: string;
+    end_time: string;
+};
+
+/**
  * 追加行事の1行。
  */
 export type ExtraEventRow = {

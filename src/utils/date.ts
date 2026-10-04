@@ -59,3 +59,57 @@ export function diffInDays(a: Date, b: Date): number {
     const utcB = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
     return Math.round((utcA - utcB) / msPerDay);
 }
+
+/**
+ * 様々な日付表現（"10月5日", "10/5", "10-5", "2026/10/05" 等）を "10月5日" 形式に正規化する
+ */
+export function normalizeDateKey(dateStr: string): string {
+    if (!dateStr) return "";
+    const trimmed = dateStr.trim();
+    if (/^\d{1,2}月\d{1,2}日$/.test(trimmed)) {
+        return trimmed;
+    }
+    const slashMatch = trimmed.match(/^(\d{1,2})[/-](\d{1,2})$/);
+    if (slashMatch) {
+        return `${parseInt(slashMatch[1], 10)}月${parseInt(slashMatch[2], 10)}日`;
+    }
+    const fullMatch = trimmed.match(/^\d{4}[/-](\d{1,2})[/-](\d{1,2})$/);
+    if (fullMatch) {
+        return `${parseInt(fullMatch[1], 10)}月${parseInt(fullMatch[2], 10)}日`;
+    }
+    const d = parseMonthDayString(trimmed);
+    return d ? formatMonthDayJa(d) : trimmed;
+}
+
+/**
+ * 10月6日以降（後期時間割適用期間）であるかを判定する。
+ * 日本の学校年度（4月〜翌年3月）において、10月6日〜3月31日を後期とする。
+ */
+export function isLaterSemester(dateOrDateKey: Date | string): boolean {
+    if (!dateOrDateKey) return false;
+
+    if (typeof dateOrDateKey === "string") {
+        const normalized = normalizeDateKey(dateOrDateKey);
+        const match = normalized.match(/^(\d{1,2})月(\d{1,2})日$/);
+        if (match) {
+            const m = parseInt(match[1], 10);
+            const d = parseInt(match[2], 10);
+            if (m === 10) return d >= 6;
+            if (m > 10 || m <= 3) return true;
+            return false;
+        }
+    }
+
+    const date = typeof dateOrDateKey === "string" ? parseMonthDayString(dateOrDateKey) : dateOrDateKey;
+    if (!date) return false;
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+
+    if (month === 10) {
+        return day >= 6;
+    }
+    if (month > 10 || month <= 3) {
+        return true;
+    }
+    return false;
+}
