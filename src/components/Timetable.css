@@ -81,22 +81,22 @@ body.use-split .timetable-2 {
 }
 
 .timetable thead th {
-    color: var(--accent-color);
+    color: var(--text-color);
     border-bottom: 2px solid var(--border-strong-color);
 }
 
 /* 今日 / 土曜 / 休日 */
-.timetable thead th.today {
-    background: var(--today-color);
-    color: var(--text-strong-color);
-}
-
 .timetable thead th.saturday {
     color: var(--saturday-color);
 }
 
 .timetable thead th.holiday {
     color: var(--holiday-color);
+}
+
+.timetable thead th.today {
+    background: var(--today-color);
+    color: var(--text-strong-color);
 }
 
 /* =========================================================
@@ -220,15 +220,9 @@ body.use-split .timetable-2 {
 
 /* 特別時程セル（時程変更・開始/終了時間表示、セルの色は通常色を維持） */
 
-:root.theme-light .timetable td.has-special-time .exam-time {
-    color: #64748b;
-    opacity: 0.9;
-}
-
-:root .timetable td.has-special-time .exam-time,
-:root.theme-dark .timetable td.has-special-time .exam-time {
-    color: #94a3b8;
-    opacity: 0.9;
+.timetable td.has-special-time .exam-time {
+    color: inherit;
+    opacity: 1;
 }
 
 /* 考査セル（紫色背景・テキスト色は通常色を維持） */
@@ -295,4 +289,3 @@ body.use-split .timetable-2 {
     background-color: var(--timetable-changed-bg);
     filter: brightness(1.15);
 }
-
