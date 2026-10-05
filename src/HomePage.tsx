@@ -445,6 +445,33 @@ export default function HomePage({
         }
     };
 
+    const handleChangeDay = (next: Date) => {
+        const todayStart = startOfDay(new Date());
+        const normalizedTarget = startOfDay(next);
+
+        // 「今日に戻る」が押された場合：常に基準日（オフセット0）を今日にして選択する
+        if (normalizedTarget.getTime() === todayStart.getTime()) {
+            setBaseDay(todayStart);
+            setSelectedOffset(0);
+            return;
+        }
+
+        const currentDay = addDays(baseDay, selectedOffset);
+        const dayDiff = diffInDays(normalizedTarget, currentDay);
+
+        if (dayDiff === 1) {
+            // 「次へ」が押された場合：選択を移動させず日付（テーブル全体）を1日進める
+            setBaseDay((prev) => addDays(prev, 1));
+        } else if (dayDiff === -1) {
+            // 「前へ」が押された場合：選択を移動させず日付（テーブル全体）を1日戻す
+            setBaseDay((prev) => addDays(prev, -1));
+        } else {
+            // 月・日セレクタ等で特定日付が選択された場合：対象日を先頭にして配置
+            setBaseDay(normalizedTarget);
+            setSelectedOffset(0);
+        }
+    };
+
     return (
         <>
             <h1 className="title">時間割アプリ</h1>
@@ -485,7 +512,7 @@ export default function HomePage({
 
             <Navbar
                 day={day}
-                onChangeDay={(next) => setBaseDay(addDays(startOfDay(next), -selectedOffset))}
+                onChangeDay={handleChangeDay}
                 theme={theme}
                 toggleTheme={toggleTheme}
                 onOpenSettings={() => setQueue((q) => [...q, "settings"])}

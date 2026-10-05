@@ -238,7 +238,7 @@ export default function Timetable({
 
                             return (
                                 <th
-                                    key={offset}
+                                    key={`${tableClassName}-${offset}-${dateKey}`}
                                     className={headerClassName}
                                     onClick={() => setSelectedOffset(offset)}
                                 >

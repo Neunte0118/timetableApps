@@ -90,14 +90,18 @@ body.use-split .timetable-2 {
     border-bottom: 2px solid var(--border-strong-color);
 }
 
-/* 今日 / 土曜 / 休日 */
+/* 土曜 / 休日 / 今日 */
+.timetable thead th:not(.today) {
+    background-color: var(--surface-3-color);
+}
+
 .timetable thead th.saturday:not(.today) {
-    background-color: var(--saturday-bg-color);
+    background-color: var(--surface-3-color);
     color: var(--saturday-color);
 }
 
 .timetable thead th.holiday:not(.today) {
-    background-color: var(--holiday-bg-color);
+    background-color: var(--surface-3-color);
     color: var(--holiday-color);
 }
 
@@ -161,8 +165,8 @@ body.use-split .timetable-2 {
 }
 
 .timetable .toggle-header {
-    background-color: var(--surface-color);
-    color: var(--text-color);
+    background-color: var(--surface-3-color);
+    color: var(--accent-color);
 }
 
 .selected,
@@ -173,8 +177,8 @@ body.use-split .timetable-2 {
 
 /* 選択中でも今日色を保持 */
 .timetable thead th.today.date-selected {
-    background: var(--today-color);
     background-color: var(--today-color);
+    box-shadow: 0 0 10px var(--today-color);
 }
 
 .timetable .subject-selected {
