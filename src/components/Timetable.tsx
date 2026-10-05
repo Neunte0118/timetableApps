@@ -205,15 +205,7 @@ export default function Timetable({
 
         const periods = Array.from({ length: maxPeriod }, (_, i) => i + 1);
 
-        const hasSpecialSchedule = offsets.some((offset) => {
-            const dateKey = formatMonthDayJa(addDays(baseDay, offset));
-            return specialSchedules?.some((s) => {
-                const d = normalizeDateKey(s.date);
-                return d === dateKey || s.date.trim() === dateKey;
-            });
-        });
-
-        const isCompact = maxPeriod >= 6 || hasSpecialSchedule;
+        const isCompact = maxPeriod >= 6;
         const tableClasses = [
             tableClassName,
             isCompact ? "timetable-compact" : "",
@@ -391,7 +383,7 @@ export default function Timetable({
 
                                 const cellClassName = [
                                     "subject",
-                                    hasSpecialTime ? "has-special-time exam-cell" : "",
+                                    hasSpecialTime ? "has-special-time exam-cell exam-purple" : "",
                                     isSelected ? "subject-selected" : "",
                                     isHighlighted ? "highlight-cell" : "",
                                     isChanged ? "timetable-changed" : "",
