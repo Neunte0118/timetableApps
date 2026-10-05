@@ -52,10 +52,15 @@
 .timetable table.timetable-compact .exam-time {
     font-size: 7.5px;
     letter-spacing: -0.3px;
+    line-height: 1;
+}
+
+.timetable table.timetable-compact .exam-time-start {
     top: 1px;
 }
 
 .timetable table.timetable-compact .exam-time-end {
+    top: auto;
     bottom: 1px;
 }
 
@@ -204,6 +209,7 @@ body.use-split .timetable-2 {
 }
 
 .timetable .exam-time-end {
+    top: auto;
     bottom: 1px;
 }
 
