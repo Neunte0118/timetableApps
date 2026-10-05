@@ -86,21 +86,23 @@ body.use-split .timetable-2 {
 }
 
 .timetable thead th {
-    color: var(--text-color);
+    color: var(--accent-color);
     border-bottom: 2px solid var(--border-strong-color);
 }
 
 /* 今日 / 土曜 / 休日 */
-.timetable thead th.saturday {
+.timetable thead th.saturday:not(.today) {
+    background-color: var(--saturday-bg-color);
     color: var(--saturday-color);
 }
 
-.timetable thead th.holiday {
+.timetable thead th.holiday:not(.today) {
+    background-color: var(--holiday-bg-color);
     color: var(--holiday-color);
 }
 
 .timetable thead th.today {
-    background: var(--today-color);
+    background-color: var(--today-color);
     color: var(--text-strong-color);
 }
 
@@ -224,11 +226,24 @@ body.use-split .timetable-2 {
     font-weight: 700;
 }
 
-/* 特別時程セル（時程変更・開始/終了時間表示、セルの色は通常色を維持） */
+/* 特別時程セルは通常セルと同じ背景色を維持 */
+.timetable td.special-schedule-cell {
+    background-color: var(--surface-color);
+}
 
-.timetable td.has-special-time .exam-time {
-    color: inherit;
-    opacity: 1;
+.timetable td.special-schedule-cell.subject-selected {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+:root.theme-light .timetable td.has-special-time .exam-time {
+    color: #64748b;
+    opacity: 0.9;
+}
+
+:root .timetable td.has-special-time .exam-time,
+:root.theme-dark .timetable td.has-special-time .exam-time {
+    color: #94a3b8;
+    opacity: 0.9;
 }
 
 /* 考査セル（紫色背景・テキスト色は通常色を維持） */
