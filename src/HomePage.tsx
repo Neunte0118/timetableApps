@@ -97,6 +97,12 @@ const LOCAL_UPDATE_INFO_3_5_0: UpdateInfoRow = {
         "テーマ切り替えアイコンの表示およびルートアクセスの改善",
 };
 
+const LOCAL_UPDATE_INFO_3_6_0: UpdateInfoRow = {
+    versions: "3.6.0",
+    dates: "2026/10/05",
+    contents: "時間割セル・日付の背景色を修正\n更新時の更新情報表示を最新の1件に変更",
+};
+
 function parseUpdateInfoRows(rows: NestedRecord[]): UpdateInfoRow[] {
     const list: UpdateInfoRow[] = rows.map((row) => ({
         versions: typeof row.versions === "string" ? row.versions.trim() : "",
@@ -106,6 +112,9 @@ function parseUpdateInfoRows(rows: NestedRecord[]): UpdateInfoRow[] {
 
     if (!list.some((item) => item.versions === "3.5.0")) {
         list.unshift(LOCAL_UPDATE_INFO_3_5_0);
+    }
+    if (!list.some((item) => item.versions === "3.6.0")) {
+        list.unshift(LOCAL_UPDATE_INFO_3_6_0);
     }
     return list;
 }
