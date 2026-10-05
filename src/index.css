@@ -25,6 +25,8 @@
     --today-color: #e4007f;
     --saturday-color: #8c7ec4;
     --holiday-color: #c17d93;
+    --saturday-bg-color: rgba(140, 126, 196, 0.2);
+    --holiday-bg-color: rgba(193, 125, 147, 0.2);
     --filter-hit-color: #00FFFF;
     --timetable-changed-color: #ee7800;
     --timetable-changed-bg: rgba(238, 120, 0, 0.28);
@@ -54,6 +56,8 @@
     --today-color: #e4007f;
     --saturday-color: #58a0e4;
     --holiday-color: #e25882;
+    --saturday-bg-color: rgba(88, 160, 228, 0.18);
+    --holiday-bg-color: rgba(226, 88, 130, 0.14);
     --filter-hit-color: #006a6c;
     --timetable-changed-color: #f8991c;
     --timetable-changed-bg: rgba(248, 153, 28, 0.22);

@@ -272,6 +272,7 @@ export default function HomePage({
 
     // 更新履歴の初回チェック：最新バージョンが前回既読と異なればモーダルをキューに積む
     const [updateChecked, setUpdateChecked] = useState(false);
+    const [showAllUpdateInfo, setShowAllUpdateInfo] = useState(false);
 
     useEffect(() => {
         if (updateChecked) return;
@@ -281,6 +282,7 @@ export default function HomePage({
         const lastSeen = getStorage<string>("lastSeenVersion");
 
         if (latestVersion && latestVersion !== lastSeen) {
+            setShowAllUpdateInfo(false);
             setQueue((q) => (q.includes("updateInfo") ? q : [...q, "updateInfo"]));
         }
 
@@ -537,7 +539,11 @@ export default function HomePage({
 
                     setCurrent(null);
                 }}
-                data={UpdateData ?? undefined}
+                data={
+                    UpdateData
+                        ? (showAllUpdateInfo ? UpdateData : UpdateData.slice(0, 1))
+                        : undefined
+                }
             />
 
             <SearchModal
@@ -553,6 +559,9 @@ export default function HomePage({
                 open={current === "settings"}
                 onClose={() => setCurrent(null)}
                 onOpen={(modalType) => {
+                    if (modalType === "updateInfo") {
+                        setShowAllUpdateInfo(true);
+                    }
                     setQueue((q) => [modalType, ...q]);
                     setCurrent(null);
                 }}

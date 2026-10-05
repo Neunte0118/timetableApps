@@ -391,6 +391,7 @@ export default function Timetable({
 
                                 const cellClassName = [
                                     "subject",
+                                    specialSchedule ? "special-schedule-cell" : "",
                                     hasSpecialTime ? "has-special-time exam-cell" : "",
                                     isSelected ? "subject-selected" : "",
                                     isHighlighted ? "highlight-cell" : "",
