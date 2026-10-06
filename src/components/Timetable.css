@@ -68,9 +68,17 @@
     display: none;
 }
 
-/* JSで縦サイズに応じて付与 */
+/* JSで十分な大画面・縦サイズがある場合のみ二段表示 */
 body.use-split .timetable-2 {
     display: table;
+}
+
+/* スマホ幅または縦長画面では絶対に二段表示にしない */
+@media (max-width: 767px), (orientation: portrait) and (max-width: 820px) {
+    body.use-split .timetable-2,
+    .timetable-2 {
+        display: none !important;
+    }
 }
 
 .nav-bar {

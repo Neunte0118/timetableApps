@@ -259,7 +259,15 @@ export default function HomePage({
         return 16;
     }, [viewport.width]);
 
-    const isSplit = useMemo(() => viewport.height >= 740, [viewport.height]);
+    const isSplit = useMemo(() => {
+        // iPhoneやAndroid等のスマートフォン（横幅768px未満）では画面がめり込むため常に単段表示
+        if (viewport.width < 768) return false;
+        // 縦横比が縦長すぎる画面（スマホ等）も二段表示を無効化
+        const aspectRatio = viewport.height / Math.max(1, viewport.width);
+        if (aspectRatio > 1.4) return false;
+        // iPadや大型ディスプレイなど縦に十分な余裕（900px以上）がある場合のみ二段表示
+        return viewport.height >= 900;
+    }, [viewport.width, viewport.height]);
 
     useEffect(() => {
         const onResize = () => {

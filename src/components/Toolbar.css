@@ -4,7 +4,7 @@ select::-webkit-scrollbar {
 
 .toolbar {
     width: 90%;
-    margin: 0 auto -6px;
+    margin: 0 auto 4px;
     display: flex;
     justify-content: flex-start;
     align-items: center;
