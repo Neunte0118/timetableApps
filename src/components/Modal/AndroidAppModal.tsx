@@ -14,8 +14,6 @@ export default function AndroidAppModal({ open, onClose }: Props) {
                 <p style={{ margin: "0 0 12px", fontWeight: 600 }}>
                     ついにAndroid版時間割アプリがリリース！
                     ネイティブアプリだからこそ可能になった新機能で、時間割確認の手間を大幅削減します！
-                    <br />
-                    ※ほとんどAIによる開発のため、不具合が多発する恐れがあります
                 </p>
 
                 {latestVersion && latestInfo && (

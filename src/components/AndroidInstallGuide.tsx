@@ -152,7 +152,7 @@ export default function AndroidInstallGuide() {
                     インストール方法
                 </h4>
                 <p className="android-guide-subtitle">
-                    お使いの機種またはアプリを選択すると、詳しいインストール手順(AIが教えてくれたものそのままです)が表示されます。
+                    お使いの機種またはアプリを選択すると、詳しいインストール手順が表示されます。
                 </p>
             </div>
 

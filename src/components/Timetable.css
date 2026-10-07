@@ -68,17 +68,13 @@
     display: none;
 }
 
-/* JSで十分な大画面・縦サイズがある場合のみ二段表示 */
+/* JSで高さが閾値を超えた場合に二段表示 */
 body.use-split .timetable-2 {
     display: table;
 }
 
-/* スマホ幅または縦長画面では絶対に二段表示にしない */
-@media (max-width: 767px), (orientation: portrait) and (max-width: 820px) {
-    body.use-split .timetable-2,
-    .timetable-2 {
-        display: none !important;
-    }
+body.use-split .timetable table {
+    margin: 3px auto;
 }
 
 .nav-bar {
