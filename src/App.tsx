@@ -31,11 +31,25 @@ export default function App() {
     return (
         <Routes>
             <Route path="/" element={homeElement} />
+            <Route path="/timetableApps" element={homeElement} />
+            <Route path="/timetableApps/" element={homeElement} />
             <Route path="/tools/timetableApps" element={homeElement} />
             <Route path="/tools/timetableApps/" element={homeElement} />
 
             <Route
                 path="/exam/:examTableId"
+                element={
+                    <ExamTable
+                        theme={theme}
+                        isTermAccepted={isTermAccepted}
+                        classNumber={classNumber}
+                        subjectChoices={subjectChoices}
+                    />
+                }
+            />
+
+            <Route
+                path="/timetableApps/exam/:examTableId"
                 element={
                     <ExamTable
                         theme={theme}
