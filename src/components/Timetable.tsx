@@ -384,7 +384,7 @@ export default function Timetable({
                                 const cellClassName = [
                                     "subject",
                                     specialSchedule ? "special-schedule-cell" : "",
-                                    hasSpecialTime ? "has-special-time exam-cell" : "",
+                                    hasSpecialTime ? "has-special-time" : "",
                                     isSelected ? "subject-selected" : "",
                                     isHighlighted ? "highlight-cell" : "",
                                     isChanged ? "timetable-changed" : "",

@@ -173,25 +173,31 @@ body.use-split .timetable table {
     color: var(--accent-color);
 }
 
-/* 選択列全体のハイライト（1限〜6限）: 縦のまとまりが一目でわかる */
+/* 選択列全体のハイライトと枠線（通常の時程を含む日付全体の枠） */
 :root.theme-light .timetable td.subject-selected {
-    background-color: rgba(2, 132, 199, 0.12) !important;
-    border-left: 1.5px solid rgba(2, 132, 199, 0.45) !important;
-    border-right: 1.5px solid rgba(2, 132, 199, 0.45) !important;
+    background-color: rgba(2, 132, 199, 0.12);
+    border-left: 1.5px solid rgba(2, 132, 199, 0.45);
+    border-right: 1.5px solid rgba(2, 132, 199, 0.45);
 }
 
 :root.theme-dark .timetable td.subject-selected,
 :root .timetable td.subject-selected {
-    background-color: rgba(2, 132, 199, 0.22) !important;
-    border-left: 1.5px solid rgba(56, 189, 248, 0.55) !important;
-    border-right: 1.5px solid rgba(56, 189, 248, 0.55) !important;
+    background-color: rgba(2, 132, 199, 0.22);
+    border-left: 1.5px solid rgba(56, 189, 248, 0.55);
+    border-right: 1.5px solid rgba(56, 189, 248, 0.55);
 }
 
-/* 考査セルや時間割変更セルが選択列にある場合の強調 */
-.timetable td.exam-cell.subject-selected,
-.timetable td.timetable-changed.subject-selected {
-    box-shadow: inset 0 0 0 1.5px rgba(2, 132, 199, 0.65);
-    filter: brightness(1.08);
+/* 特別時程セルのみ、個別の青枠・囲み線を完全に削除 */
+.timetable td.special-schedule-cell,
+.timetable td.has-special-time {
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.timetable td.special-schedule-cell.subject-selected,
+.timetable td.has-special-time.subject-selected {
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 /* =========================================================
