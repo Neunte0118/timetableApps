@@ -1,0 +1,167 @@
+/* =========================================================
+   iPhone (PWA) インストールガイドスタイル
+========================================================= */
+
+.ios-pwa-guide {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-color);
+}
+
+.ios-pwa-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+}
+
+.ios-pwa-feature-card {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: rgba(0, 122, 255, 0.05);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+:root.theme-dark .ios-pwa-feature-card {
+    background: rgba(56, 189, 248, 0.07);
+}
+
+.ios-pwa-feature-icon {
+    flex-shrink: 0;
+    color: #007aff;
+    margin-top: 2px;
+}
+
+:root.theme-dark .ios-pwa-feature-icon {
+    color: #38bdf8;
+}
+
+.ios-pwa-feature-title {
+    font-weight: 700;
+    font-size: 12.5px;
+    margin-bottom: 2px;
+    color: var(--text-strong-color);
+}
+
+.ios-pwa-feature-desc {
+    font-size: 11.5px;
+    opacity: 0.85;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.ios-pwa-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ios-pwa-step-card {
+    display: flex;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--surface-color);
+}
+
+.ios-pwa-step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #007aff;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+:root.theme-dark .ios-pwa-step-num {
+    background: #0284c7;
+}
+
+.ios-pwa-step-content {
+    flex: 1;
+}
+
+.ios-pwa-step-title {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 2px;
+    color: var(--text-strong-color);
+}
+
+.ios-pwa-step-desc {
+    font-size: 12px;
+    margin: 0;
+    opacity: 0.9;
+    line-height: 1.5;
+}
+
+.ios-pwa-step-note {
+    font-size: 11px;
+    opacity: 0.75;
+    margin-top: 4px;
+}
+
+.ios-pwa-inline-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(127, 127, 127, 0.15);
+    font-weight: 600;
+    font-size: 11.5px;
+}
+
+.ios-pwa-status-box {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(127, 127, 127, 0.08);
+    border: 1px dashed var(--border-color);
+    font-size: 11.5px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ios-pwa-status-title {
+    font-weight: 700;
+    color: var(--text-strong-color);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ios-pwa-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ios-pwa-reset-btn {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    border: 1px solid var(--border-color);
+    background: var(--surface-2-color);
+    color: var(--text-strong-color);
+    cursor: pointer;
+    align-self: flex-start;
+    margin-top: 4px;
+    transition: opacity 0.15s ease;
+}
+
+.ios-pwa-reset-btn:hover {
+    opacity: 0.85;
+}

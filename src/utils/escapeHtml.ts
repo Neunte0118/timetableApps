@@ -12,6 +12,7 @@ export function escapeHtml(input: string): string {
 
 export function escapeHtmlWithoutWhiteList(input: string): string {
     const links: string[] = [];
+    const prefix = `__SAFE_LINK_${Math.random().toString(36).slice(2)}_`;
 
     // 許可する <a href="...">...</a> を退避
     input = input.replace(
@@ -21,7 +22,7 @@ export function escapeHtmlWithoutWhiteList(input: string): string {
             links.push(
                 `<a href="${href}" target="_blank" rel="noopener noreferrer">${escapeHtml(text)}</a>`
             );
-            return `__LINK_${i}__`;
+            return `${prefix}${i}__`;
         }
     );
 
@@ -33,7 +34,7 @@ export function escapeHtmlWithoutWhiteList(input: string): string {
 
     // リンクを復元
     links.forEach((link, i) => {
-        html = html.replace(`__LINK_${i}__`, link);
+        html = html.replace(`${prefix}${i}__`, link);
     });
 
     return html;

@@ -34,6 +34,11 @@ function setDeep(target: NestedRecord, path: PathSegment[], value: unknown): voi
         const last = i === path.length - 1;
         const next = path[i + 1];
 
+        // プロトタイプ汚染（Prototype Pollution）防止
+        if (key === "__proto__" || key === "constructor" || key === "prototype") {
+            return;
+        }
+
         if (last) {
             current[key as any] = value;
             return;

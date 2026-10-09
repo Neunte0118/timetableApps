@@ -126,7 +126,10 @@ export default function EventMemoBox({ theme, dayKey, plannedEvents }: Props) {
 
     return (
         <div className="event-memo-box">
-            <div className="label">行事</div>
+            <div className="label">
+                <span className="label-text">行事</span>
+                <span className="label-date-badge">{dayKeySlash}</span>
+            </div>
 
             <div className="event-cell">
                 {extraEvents === null && <div className="muted">読み込み中…</div>}
@@ -138,7 +141,10 @@ export default function EventMemoBox({ theme, dayKey, plannedEvents }: Props) {
                 )}
             </div>
 
-            <div className="label">メモ</div>
+            <div className="label">
+                <span className="label-text">メモ</span>
+                <span className="label-date-badge">{dayKeySlash}</span>
+            </div>
 
             <textarea
                 className="memo-input"

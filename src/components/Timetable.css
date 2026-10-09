@@ -173,20 +173,25 @@ body.use-split .timetable table {
     color: var(--accent-color);
 }
 
-.selected,
-.timetable .date-selected {
-    background-color: rgba(0, 161, 233, 0.3);
-    box-shadow: 0 0 10px #00a1e9;
+/* 選択列全体のハイライト（1限〜6限）: 縦のまとまりが一目でわかる */
+:root.theme-light .timetable td.subject-selected {
+    background-color: rgba(2, 132, 199, 0.12) !important;
+    border-left: 1.5px solid rgba(2, 132, 199, 0.45) !important;
+    border-right: 1.5px solid rgba(2, 132, 199, 0.45) !important;
 }
 
-/* 選択中でも今日色を保持 */
-.timetable thead th.today.date-selected {
-    background-color: var(--today-color);
-    box-shadow: 0 0 10px var(--today-color);
+:root.theme-dark .timetable td.subject-selected,
+:root .timetable td.subject-selected {
+    background-color: rgba(2, 132, 199, 0.22) !important;
+    border-left: 1.5px solid rgba(56, 189, 248, 0.55) !important;
+    border-right: 1.5px solid rgba(56, 189, 248, 0.55) !important;
 }
 
-.timetable .subject-selected {
-    background: rgba(255, 255, 255, 0.05);
+/* 考査セルや時間割変更セルが選択列にある場合の強調 */
+.timetable td.exam-cell.subject-selected,
+.timetable td.timetable-changed.subject-selected {
+    box-shadow: inset 0 0 0 1.5px rgba(2, 132, 199, 0.65);
+    filter: brightness(1.08);
 }
 
 /* =========================================================

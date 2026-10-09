@@ -5,6 +5,7 @@ import Timetable from "./components/Timetable";
 import EventMemoBox from "./components/EventMemoBox";
 import Navbar from "./components/Navbar";
 import AndroidNoticeBanner from "./components/AndroidNoticeBanner";
+import IOSPwaNoticeBanner from "./components/IOSPwaNoticeBanner";
 
 import { useModalQueue } from "./hooks/useModalQueue";
 
@@ -16,6 +17,7 @@ import SearchModal from "./components/Modal/SearchModal";
 import SettingModal from "./components/Modal/SettingModal";
 import HtmlDocumentModal from "./components/Modal/HtmlDocumentModal";
 import AndroidAppModal from "./components/Modal/AndroidAppModal";
+import IOSPwaModal from "./components/Modal/IOSPwaModal";
 
 import helpHtml from "./content/help.html?raw";
 import sourceHtml from "./content/source.html?raw";
@@ -480,6 +482,7 @@ export default function HomePage({
             <h1 className="title">時間割アプリ</h1>
 
             <AndroidNoticeBanner onOpenAndroidApp={() => setQueue((q) => ["androidApp", ...q])} />
+            <IOSPwaNoticeBanner onOpenIOSGuide={() => setQueue((q) => ["iosPwa", ...q])} />
 
             <Toolbar
                 tableMode={tableMode}
@@ -599,6 +602,11 @@ export default function HomePage({
 
             <AndroidAppModal
                 open={current === "androidApp"}
+                onClose={() => setCurrent(null)}
+            />
+
+            <IOSPwaModal
+                open={current === "iosPwa"}
                 onClose={() => setCurrent(null)}
             />
         </>

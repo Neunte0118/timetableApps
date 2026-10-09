@@ -26,10 +26,29 @@
 .label {
     border-right: 2px solid var(--border-color);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 4px 8px;
+    padding: 3px 6px;
     font-weight: 600;
+    gap: 1px;
+    user-select: none;
+}
+
+.label-text {
+    font-size: 12px;
+}
+
+.label-date-badge {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #0284c7;
+    opacity: 0.95;
+    letter-spacing: -0.2px;
+}
+
+:root.theme-dark .label-date-badge {
+    color: #38bdf8;
 }
 
 .event-cell {
