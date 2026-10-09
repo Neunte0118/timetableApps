@@ -45,7 +45,15 @@
     font-weight: 700;
     font-size: 12.5px;
     margin-bottom: 2px;
-    color: var(--text-strong-color);
+    color: var(--text-color);
+}
+
+:root.theme-light .ios-pwa-feature-title {
+    color: #111827;
+}
+
+:root.theme-dark .ios-pwa-feature-title {
+    color: #f3f4f6;
 }
 
 .ios-pwa-feature-desc {
@@ -93,11 +101,28 @@
     flex: 1;
 }
 
+.ios-pwa-section-title {
+    font-weight: 700;
+    margin-bottom: 8px;
+    font-size: 13.5px;
+    color: var(--text-color);
+}
+
+:root.theme-light .ios-pwa-section-title,
+:root.theme-light .ios-pwa-step-title {
+    color: #111827;
+}
+
+:root.theme-dark .ios-pwa-section-title,
+:root.theme-dark .ios-pwa-step-title {
+    color: #f3f4f6;
+}
+
 .ios-pwa-step-title {
     font-weight: 700;
     font-size: 13px;
     margin-bottom: 2px;
-    color: var(--text-strong-color);
+    color: var(--text-color);
 }
 
 .ios-pwa-step-desc {

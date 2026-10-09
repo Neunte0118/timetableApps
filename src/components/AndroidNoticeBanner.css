@@ -189,6 +189,9 @@
 
 .android-guide-download-box {
     margin: 10px 0 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .android-download-step {
@@ -199,12 +202,16 @@
 
 .android-download-button-wrapper {
     margin: 4px 0 2px;
+    display: flex;
+    justify-content: center;
 }
 
 .android-download-button {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
+    margin-left: 0;
     padding: 7px 16px;
     background: #192f60;
     color: #ffffff !important;
