@@ -7,6 +7,18 @@ export default defineConfig({
   base: '/tools/timetableApps/',
 
   plugins: [
+    {
+      name: 'root-rewrite-middleware',
+      configureServer(server) {
+        server.middlewares.use((req, _res, next) => {
+          if (req.url === '/' || req.url === '' || req.url?.startsWith('/?')) {
+            const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+            req.url = '/tools/timetableApps/' + query;
+          }
+          next();
+        });
+      },
+    },
     react(),
     VitePWA({
       registerType: 'autoUpdate',

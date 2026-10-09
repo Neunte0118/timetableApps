@@ -31,6 +31,7 @@ export default function App() {
     return (
         <Routes>
             <Route path="/" element={homeElement} />
+            <Route path="/tools/timetableApps" element={homeElement} />
             <Route path="/tools/timetableApps/" element={homeElement} />
 
             <Route
