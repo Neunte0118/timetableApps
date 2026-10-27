@@ -262,8 +262,9 @@ export default function HomePage({
     }, [viewport.width]);
 
     const isSplit = useMemo(() => {
-        // 画面の高さが閾値（750px）を超えて十分に余裕がある場合に時間割テーブルを二段表示
-        return viewport.height >= 750;
+        // 画面の高さが閾値（600px）を超えて十分に余裕がある場合に時間割テーブルを二段表示
+        // iPhone 15等のSafariブラウザ表示時（上下バー表示で実効高約660〜710px）でも確実に二段表示になるよう緩和
+        return viewport.height >= 600;
     }, [viewport.height]);
 
     useEffect(() => {
