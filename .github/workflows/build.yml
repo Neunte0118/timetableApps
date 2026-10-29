@@ -47,6 +47,14 @@ jobs:
         with:
           path: dist/
 
+      - name: Upload Downloadable Build
+        if: github.ref == 'refs/heads/main' || github.event_name == 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-build
+          path: dist/
+          retention-days: 30
+
   deploy:
     if: github.ref == 'refs/heads/main' || github.event_name == 'release'
     needs: build
