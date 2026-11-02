@@ -2,10 +2,10 @@
     margin: 4px auto;
     display: grid;
     width: 90%;
-    flex: 0 0 20dvh;
-    height: 20dvh;
-    max-height: 20dvh;
-    min-height: 20dvh;
+    flex: 0 0 17dvh;
+    height: 17dvh;
+    max-height: 18dvh;
+    min-height: 75px;
     grid-template-columns: 80px 1fr;
     grid-template-rows: repeat(2, minmax(0, 1fr));
     border-collapse: collapse;
@@ -14,6 +14,14 @@
     box-shadow: 0 0 20px rgba(0,0,0,0.4);
     box-sizing: border-box;
     overflow: hidden;
+}
+
+body.use-split .event-memo-box {
+    margin: 3px auto;
+    flex: 0 0 13dvh;
+    height: 13dvh;
+    max-height: 14dvh;
+    min-height: 65px;
 }
 
 @media (max-width: 600px) {

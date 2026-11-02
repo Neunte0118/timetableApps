@@ -7,6 +7,19 @@
     flex: 0 0 auto;
 }
 
+body.use-split .nav-bar {
+    margin: 4px auto 6px;
+    gap: 6px;
+}
+
+body.use-split .nav-bar button,
+body.use-split .month-select,
+body.use-split .day-select {
+    height: 38px;
+    padding: 6px 8px;
+    font-size: 13px;
+}
+
 .nav-bar-1,
 .nav-bar-2 {
     display: grid;

@@ -247,10 +247,22 @@ export default function HomePage({
         setTableMode((prev) => (prev === "subjects" ? "rooms" : "subjects"));
     };
 
-    const [viewport, setViewport] = useState(() => ({
-        width: window.innerWidth,
-        height: window.innerHeight,
-    }));
+    const getViewportSize = () => {
+        if (typeof window === "undefined") return { width: 390, height: 800 };
+        const w =
+            window.visualViewport?.width ||
+            window.innerWidth ||
+            document.documentElement.clientWidth ||
+            390;
+        const h =
+            window.visualViewport?.height ||
+            window.innerHeight ||
+            document.documentElement.clientHeight ||
+            800;
+        return { width: w, height: h };
+    };
+
+    const [viewport, setViewport] = useState(getViewportSize);
 
     const daysPerRow = useMemo(() => {
         const w = viewport.width;
@@ -262,18 +274,32 @@ export default function HomePage({
     }, [viewport.width]);
 
     const isSplit = useMemo(() => {
-        // 画面の高さが閾値（600px）を超えて十分に余裕がある場合に時間割テーブルを二段表示
-        // iPhone 15等のSafariブラウザ表示時（上下バー表示で実効高約660〜710px）でも確実に二段表示になるよう緩和
-        return viewport.height >= 600;
+        // iPhone 15 / 各種スマートフォン縦画面（PWA/Safari含む）で確実に二段表示になるよう判定
+        // 横画面（高さが狭い場合）は自動で一段表示に切り替え
+        return viewport.height >= 520;
     }, [viewport.height]);
 
     useEffect(() => {
         const onResize = () => {
-            setViewport({ width: window.innerWidth, height: window.innerHeight });
+            setViewport(getViewportSize());
         };
 
+        // iOS PWA起動時の画面サイズ確定遅延に対応
+        onResize();
+        const t1 = window.setTimeout(onResize, 100);
+        const t2 = window.setTimeout(onResize, 300);
+
         window.addEventListener("resize", onResize);
-        return () => window.removeEventListener("resize", onResize);
+        window.visualViewport?.addEventListener("resize", onResize);
+        window.addEventListener("orientationchange", onResize);
+
+        return () => {
+            window.clearTimeout(t1);
+            window.clearTimeout(t2);
+            window.removeEventListener("resize", onResize);
+            window.visualViewport?.removeEventListener("resize", onResize);
+            window.removeEventListener("orientationchange", onResize);
+        };
     }, []);
 
     // 更新履歴の初回チェック：最新バージョンが前回既読と異なればモーダルをキューに積む
