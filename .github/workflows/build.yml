@@ -76,11 +76,8 @@ jobs:
         run: |
           EXISTING_BODY=$(gh release view "$TAG_NAME" --json body -q .body 2>/dev/null || echo "")
           if ! echo "$EXISTING_BODY" | grep -q "$PAGE_URL"; then
-            gh release edit "$TAG_NAME" --notes "${EXISTING_BODY}
-
----
-### 🌐 Webサイト (時間割アプリ)
-👉 **[時間割アプリを開く](${PAGE_URL})**"
+            NEW_NOTES=$(printf "%s\n\n---\n### 🌐 Webサイト (時間割アプリ)\n👉 **[時間割アプリを開く](%s)**" "$EXISTING_BODY" "$PAGE_URL")
+            gh release edit "$TAG_NAME" --notes "$NEW_NOTES"
           fi
 
   deploy-to-parent:

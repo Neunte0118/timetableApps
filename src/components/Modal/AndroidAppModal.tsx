@@ -16,7 +16,7 @@ export default function AndroidAppModal({ open, onClose }: Props) {
                     ネイティブアプリだからこそ可能になった新機能で、時間割確認の手間を大幅削減します！
                 </p>
 
-                {latestVersion && latestInfo && (
+                {latestVersion && (
                     <div
                         style={{
                             marginBottom: "12px",
@@ -26,12 +26,14 @@ export default function AndroidAppModal({ open, onClose }: Props) {
                             border: "1px solid var(--border-color)",
                         }}
                     >
-                        <div style={{ fontWeight: 700, marginBottom: "2px" }}>
-                            最新バージョン: v{latestVersion}
+                        <div style={{ fontWeight: 700, marginBottom: latestInfo ? "4px" : "0" }}>
+                            最新バージョン: {latestVersion.startsWith("v") ? latestVersion : `v${latestVersion}`}
                         </div>
-                        <div style={{ fontSize: "12.5px", whiteSpace: "pre-wrap", opacity: 0.9 }}>
-                            {latestInfo}
-                        </div>
+                        {latestInfo ? (
+                            <div style={{ fontSize: "12.5px", whiteSpace: "pre-wrap", opacity: 0.9 }}>
+                                {latestInfo}
+                            </div>
+                        ) : null}
                     </div>
                 )}
 

@@ -24,7 +24,9 @@ export const ISSUE_REPORT_URL = "https://forms.gle/KiiEAds2vtjAmsZ97";
 export const TIMETABLE_CHANGE_REPORT_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfTOKMLJz896qfq7OKSv7TRwxxJxX4VIqXT4npLcGmqWNyBkg/viewform?usp=preview";
 // Android版アプリ (APK) 配布URL (フォールバック)
 export const ANDROID_APK_URL = "https://github.com/Neunte0118/TimetableAppsForAndroid/releases/download/v1.2.0/timetable-app-v1.2.0.apk";
-// Android版アプリ リリース情報CSV
+// Android版アプリ 最新リリースAPI (GitHub Releases)
+export const ANDROID_LATEST_RELEASE_API = "https://api.github.com/repos/Neunte0118/TimetableAppsForAndroid/releases/latest";
+// Android版アプリ リリース情報CSV (フォールバック用)
 export const ANDROID_RELEASES_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSizltFHoOWYdi97m2q_x21-XHwaeeMTzbUk0jlWCZRAD-CmsGn9uKZQMe2rHbIxP7_pEekWK84yf9/pub?gid=2022174384&single=true&output=csv";
 // 考査時間割
 export const EXAM_TIMETABLE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSizltFHoOWYdi97m2q_x21-XHwaeeMTzbUk0jlWCZRAD-CmsGn9uKZQMe2rHbIxP7_pEekWK84yf9/pub?gid=436772895&single=true&output=csv";
