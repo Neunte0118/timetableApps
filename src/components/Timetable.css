@@ -33,8 +33,8 @@
     margin: 2px auto;
 }
 
-.timetable table.timetable-compact th,
-.timetable table.timetable-compact td {
+.timetable table.timetable-compact tbody th,
+.timetable table.timetable-compact tbody td {
     padding: 1px 0;
 }
 
@@ -76,20 +76,29 @@ body.use-split .timetable-2 {
 }
 
 body.use-split .timetable {
-    gap: 3px;
+    gap: 6px;
+    padding: 4px 0 2px;
 }
 
 body.use-split .timetable table {
     flex: 1 1 0;
     min-height: 0;
-    height: calc(50% - 3px);
-    max-height: calc(50% - 3px);
-    margin: 0 auto;
+    height: calc(50% - 5px);
+    max-height: calc(50% - 5px);
+    margin: 2px auto;
 }
 
-body.use-split .timetable th,
-body.use-split .timetable td {
-    padding: 1px 0;
+body.use-split .timetable thead th,
+body.use-split .timetable table thead th,
+body.use-split .timetable table.timetable-compact thead th {
+    padding-top: 6px;
+    padding-bottom: 3.5px;
+    line-height: 1.25;
+}
+
+body.use-split .timetable tbody th,
+body.use-split .timetable tbody td {
+    padding: 1.5px 0;
     line-height: 1.2;
 }
 
@@ -98,16 +107,20 @@ body.use-split .timetable td {
 }
 
 /* =========================================================
-   TABLE HEADER
+   TABLE HEADER (テーブル内部の一行目)
 ========================================================= */
 
 .timetable thead {
     background: var(--surface-3-color);
 }
 
-.timetable thead th {
+.timetable thead th,
+.timetable table thead th,
+.timetable table.timetable-compact thead th {
     color: var(--accent-color);
     border-bottom: 2px solid var(--border-strong-color);
+    padding-top: 7px;
+    padding-bottom: 4px;
 }
 
 /* 土曜 / 休日 / 今日 */

@@ -82,3 +82,55 @@ jobs:
 ### 🌐 Webサイト (時間割アプリ)
 👉 **[時間割アプリを開く](${PAGE_URL})**"
           fi
+
+  deploy-to-parent:
+    name: Deploy to 1bunkaiyu314.github.io/tools/timetableApps
+    if: github.ref == 'refs/heads/main' || github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check DEPLOY_PAT Secret
+        id: check_token
+        env:
+          DEPLOY_PAT: ${{ secrets.DEPLOY_PAT }}
+        run: |
+          if [ -z "$DEPLOY_PAT" ]; then
+            echo "has_token=false" >> $GITHUB_OUTPUT
+            echo "::warning ::'DEPLOY_PAT' secret is not set. Skipping automatic deployment to 1bunkaiyu314.github.io. Please configure DEPLOY_PAT in repository secrets."
+          else
+            echo "has_token=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download Build Artifact
+        if: steps.check_token.outputs.has_token == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: website-build
+          path: dist
+
+      - name: Deploy to 1bunkaiyu314/1bunkaiyu314.github.io
+        if: steps.check_token.outputs.has_token == 'true'
+        env:
+          DEPLOY_PAT: ${{ secrets.DEPLOY_PAT }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # ターゲットリポジトリ (1bunkaiyu314.github.io) をクローン
+          git clone --depth 1 "https://x-access-token:${DEPLOY_PAT}@github.com/1bunkaiyu314/1bunkaiyu314.github.io.git" parent_repo
+          cd parent_repo
+
+          # tools/timetableApps ディレクトリを作成して成果物を配置
+          mkdir -p tools/timetableApps
+          rm -rf tools/timetableApps/*
+          cp -r ../dist/* tools/timetableApps/
+
+          # 変更がある場合のみコミットしてプッシュ
+          git add tools/timetableApps
+          if git diff --staged --quiet; then
+            echo "No changes to deploy."
+          else
+            git commit -m "Deploy timetableApps from ${{ github.repository }}@${{ github.sha }}"
+            git push origin HEAD
+            echo "Successfully deployed to 1bunkaiyu314.github.io/tools/timetableApps"
+          fi
