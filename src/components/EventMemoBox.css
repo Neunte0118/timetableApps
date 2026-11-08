@@ -2,9 +2,9 @@
     margin: 4px auto;
     display: grid;
     width: 90%;
-    flex: 0 0 17dvh;
-    height: 17dvh;
-    max-height: 18dvh;
+    flex: 1 1 0;
+    height: auto;
+    max-height: none;
     min-height: 75px;
     grid-template-columns: 80px 1fr;
     grid-template-rows: repeat(2, minmax(0, 1fr));
@@ -17,11 +17,11 @@
 }
 
 body.use-split .event-memo-box {
-    margin: 3px auto;
-    flex: 0 0 13dvh;
-    height: 13dvh;
-    max-height: 14dvh;
-    min-height: 65px;
+    margin: 3px auto 4px;
+    flex: 1 1 0;
+    height: auto;
+    max-height: none;
+    min-height: 70px;
 }
 
 @media (max-width: 600px) {
