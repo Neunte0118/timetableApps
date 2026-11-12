@@ -11,6 +11,7 @@ import type {
 import { addDays, formatMonthDayJa, formatMonthDaySlash, normalizeDateKey, isLaterSemester } from "../utils/date";
 import { resolveExamCell } from "../utils/examUtils";
 import { resolveCode } from "../hooks/useResolvedTimetables";
+import { resolveSaturdaySubject } from "../utils/saturdayLectures";
 
 type Props = {
     classNumber: number | null;
@@ -255,6 +256,7 @@ export default function Timetable({
                             {offsets.map((offset) => {
                                 const date = addDays(baseDay, offset);
                                 const dateKey = formatMonthDayJa(date);
+                                const isSaturday = date.getDay() === 6;
 
                                 const isSelected = offset === selectedOffset;
                                 const isHighlighted = Boolean(
@@ -344,8 +346,20 @@ export default function Timetable({
                                 const override = findOverride(dateKey, period);
 
                                 const code = override?.subjects ?? raw;
+
+                                // 土曜日の時程変更における選択科目の反映
+                                const saturdaySubject = isSaturday
+                                    ? resolveSaturdaySubject({
+                                          period,
+                                          code,
+                                          specialSchedule,
+                                          override,
+                                          subjectChoices,
+                                      })
+                                    : null;
+
                                 const isExpandable = Boolean(expansionMap?.[code]);
-                                const currentCourse = isExpandable ? (subjectChoices?.[code] ?? code) : code;
+                                const currentCourse = saturdaySubject ?? (isExpandable ? (subjectChoices?.[code] ?? code) : code);
 
                                 const courseOverride = (currentCourse || code)
                                     ? findCourseOverride(dateKey, period, currentCourse, code)
@@ -354,14 +368,16 @@ export default function Timetable({
                                 const effectiveSubject = courseOverride?.new_course ?? currentCourse;
                                 const isChanged = Boolean(override) || Boolean(courseOverride);
 
+                                const isNone = effectiveSubject === "なし";
+
                                 let display = "";
-                                if (effectiveSubject) {
+                                if (effectiveSubject && !isNone) {
                                     if (tableMode === "subjects") {
                                         display = effectiveSubject;
                                     } else if (tableMode === "rooms") {
                                         if (courseOverride) {
-                                            display = subjectRoomsMap?.[effectiveSubject] ?? (isExpandable ? "?" : `${classNumber}組`);
-                                        } else if (!isExpandable) {
+                                            display = subjectRoomsMap?.[effectiveSubject] ?? (isExpandable || isSaturday ? "?" : `${classNumber}組`);
+                                        } else if (!isExpandable && !isSaturday) {
                                             display = `${classNumber}組`;
                                         } else {
                                             display = subjectRoomsMap?.[effectiveSubject] ?? "?";
@@ -373,21 +389,21 @@ export default function Timetable({
                                     }
                                 }
 
-                                const startTime = specialSchedule?.start_time?.trim() && specialSchedule.start_time.trim() !== "-"
+                                const startTime = !isNone && specialSchedule?.start_time?.trim() && specialSchedule.start_time.trim() !== "-"
                                     ? specialSchedule.start_time.trim()
                                     : "";
-                                const endTime = specialSchedule?.end_time?.trim() && specialSchedule.end_time.trim() !== "-"
+                                const endTime = !isNone && specialSchedule?.end_time?.trim() && specialSchedule.end_time.trim() !== "-"
                                     ? specialSchedule.end_time.trim()
                                     : "";
                                 const hasSpecialTime = Boolean(startTime || endTime);
 
                                 const cellClassName = [
                                     "subject",
-                                    specialSchedule ? "special-schedule-cell" : "",
+                                    !isNone && specialSchedule ? "special-schedule-cell" : "",
                                     hasSpecialTime ? "has-special-time" : "",
                                     isSelected ? "subject-selected" : "",
                                     isHighlighted ? "highlight-cell" : "",
-                                    isChanged ? "timetable-changed" : "",
+                                    !isNone && isChanged ? "timetable-changed" : "",
                                 ]
                                     .filter(Boolean)
                                     .join(" ");

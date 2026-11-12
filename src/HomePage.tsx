@@ -54,6 +54,7 @@ import {
     SPECIAL_SCHEDULE_URL,
 } from "./config/url";
 import { resolveCode } from "./hooks/useResolvedTimetables";
+import { SATURDAY_LECTURES, SATURDAY_LECTURE_KEYS } from "./utils/saturdayLectures";
 
 function parseSpecialScheduleRows(rows: NestedRecord[]): SpecialScheduleRow[] {
     return rows.map((row) => ({
@@ -421,18 +422,61 @@ export default function HomePage({
         overrides,
     ]);
 
+    const [checkedClassNumber, setCheckedClassNumber] = useState<number | null>(null);
+
+    // 起動時およびクラス変更時：未選択の科目（クラスで使われる展開科目および土曜講習①〜④）がある場合は登録モーダルを表示
     useEffect(() => {
         if (!classNumber) return;
+        if (checkedClassNumber === classNumber) return;
 
+        // クラス時間割または後期時間割が読み込まれるまで待つ
         const classData = classPatternData?.[classNumber] ?? laterClassPatternData?.[classNumber];
         if (!classData) return;
 
-        const subjects = getStorage<Record<string, string>>("subjectChoices") ?? {};
+        // 時間割の解決（resolvedTimetables）が完了するまで待つ
+        if (!resolvedTimetables || !resolvedTimetables[classNumber]) return;
 
-        if (Object.keys(subjects).length === 0) {
-            setQueue((q) => (q.includes("subject") ? q : [...q, "subject"]));
+        // expansionMap（選択科目展開データ）が準備されるまで待つ
+        const expansionKeys = Object.keys(expansionMap ?? {});
+        if (expansionKeys.length === 0) return;
+
+        const keySet = new Set(expansionKeys);
+
+        // クラスで実際に使われる通常の選択科目（展開科目）のみを抽出（使われない展開は除外）
+        const relevantRegularElectives = (expansionClassMap ?? []).filter(
+            (v) => keySet.has(v) && !SATURDAY_LECTURE_KEYS.has(v)
+        );
+
+        const currentChoices = subjectChoices ?? getStorage<Record<string, string>>("subjectChoices") ?? {};
+
+        // 1. 通常の選択科目（クラスで使われる展開）に未選択（未設定または空文字）があるか
+        const hasUnselectedRegular = relevantRegularElectives.some(
+            (key) => !currentChoices[key] || currentChoices[key].trim() === ""
+        );
+
+        // 2. 土曜講習①〜④に未選択（未設定または空文字）があるか（「なし」は選択済み扱い）
+        const hasUnselectedSaturday = SATURDAY_LECTURES.some((lecture) => {
+            const val = currentChoices[lecture.key] || lecture.aliases.map((a) => currentChoices[a]).find(Boolean);
+            return !val || val.trim() === "";
+        });
+
+        if (hasUnselectedRegular || hasUnselectedSaturday) {
+            setQueue((q) => (q.includes("subject") || current === "subject" ? q : [...q, "subject"]));
         }
-    }, [classNumber, classPatternData, laterClassPatternData, setQueue]);
+
+        setCheckedClassNumber(classNumber);
+    }, [
+        classNumber,
+        checkedClassNumber,
+        classPatternData,
+        laterClassPatternData,
+        resolvedTimetables,
+        expansionMap,
+        expansionClassMap,
+        subjectChoices,
+        current,
+        setQueue,
+    ]);
 
     // 初回マウント時：利用規約同意・クラス・選択科目をローカルストレージから復元
     useEffect(() => {

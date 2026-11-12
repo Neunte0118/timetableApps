@@ -1,6 +1,7 @@
 import { useCachedCSV } from "./useCachedCSV";
 import type { NestedRecord, SubjectsData } from "../types/type";
 import { SUBJECTS_ROOMS_MAP_URL } from "@/config/url";
+import { SATURDAY_LECTURES_MAP } from "../utils/saturdayLectures";
 
 function parseRows(rows: NestedRecord[]): SubjectsData {
     const expansionMap: Record<string, string[]> = {};
@@ -28,6 +29,19 @@ function parseRows(rows: NestedRecord[]): SubjectsData {
         }
     });
 
+    // 土曜講習①〜④の選択科目をexpansionMapに組み込む
+    Object.entries(SATURDAY_LECTURES_MAP).forEach(([origin, electives]) => {
+        if (!expansionMap[origin]) {
+            expansionMap[origin] = [...electives];
+        } else {
+            electives.forEach((e) => {
+                if (!expansionMap[origin].includes(e)) {
+                    expansionMap[origin].push(e);
+                }
+            });
+        }
+    });
+
     Object.keys(expansionMap).forEach((origin) => {
         expansionMap[origin].sort((a, b) => a.localeCompare(b, "ja", { numeric: true }));
     });
@@ -40,9 +54,9 @@ export function useSubjectsData(): SubjectsData {
         cacheKey: "subjectsData",
         url: SUBJECTS_ROOMS_MAP_URL,
         parse: parseRows,
-        fallback: () => ({ expansionMap: {}, subjectsRoomsMap: {} }),
+        fallback: () => ({ expansionMap: { ...SATURDAY_LECTURES_MAP }, subjectsRoomsMap: {} }),
         errorLabel: "選択科目・教室表の読み込みに失敗しました",
     });
 
-    return data ?? { expansionMap: null, subjectsRoomsMap: null };
+    return data ?? { expansionMap: { ...SATURDAY_LECTURES_MAP }, subjectsRoomsMap: null };
 }
