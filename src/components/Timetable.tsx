@@ -11,7 +11,7 @@ import type {
 import { addDays, formatMonthDayJa, formatMonthDaySlash, normalizeDateKey, isLaterSemester } from "../utils/date";
 import { resolveExamCell } from "../utils/examUtils";
 import { resolveCode } from "../hooks/useResolvedTimetables";
-import { resolveSaturdaySubject } from "../utils/saturdayLectures";
+import { resolveSaturdaySubject, doesSubjectMatchOption } from "../utils/saturdayLectures";
 
 type Props = {
     classNumber: number | null;
@@ -94,9 +94,9 @@ export default function Timetable({
         return map?.[classNumber];
     };
 
-    const findSpecialSchedule = (dateKey: string, period: number): SpecialScheduleRow | undefined => {
-        if (!specialSchedules || specialSchedules.length === 0) return undefined;
-        return specialSchedules.find((s) => {
+    const findSpecialSchedules = (dateKey: string, period: number): SpecialScheduleRow[] => {
+        if (!specialSchedules || specialSchedules.length === 0) return [];
+        return specialSchedules.filter((s) => {
             const d = normalizeDateKey(s.date);
             return (d === dateKey || s.date.trim() === dateKey) && Number(s.period) === period;
         });
@@ -335,13 +335,15 @@ export default function Timetable({
                                     );
                                 }
 
-                                const specialSchedule = findSpecialSchedule(dateKey, period);
+                                const matchingSpecials = findSpecialSchedules(dateKey, period);
                                 const cellClassData = getClassDataForDate(dateKey);
-                                const rawSpecial = specialSchedule
-                                    ? (cellClassData
-                                          ? resolveCode(specialSchedule.subject.trim(), cellClassData) || specialSchedule.subject.trim()
-                                          : specialSchedule.subject.trim())
-                                    : "";
+                                const resolvedSpecials = matchingSpecials.map((s) => ({
+                                    row: s,
+                                    subject: cellClassData
+                                        ? resolveCode(s.subject.trim(), cellClassData) || s.subject.trim()
+                                        : s.subject.trim(),
+                                }));
+                                const rawSpecial = resolvedSpecials[0]?.subject ?? "";
                                 const raw = rawSpecial || (timetableData?.[dateKey]?.[period - 1] ?? "");
                                 const override = findOverride(dateKey, period);
 
@@ -352,18 +354,27 @@ export default function Timetable({
                                     ? resolveSaturdaySubject({
                                           period,
                                           code,
-                                          specialSchedule,
+                                          specialSchedules: matchingSpecials,
+                                          resolvedSpecialSubjects: resolvedSpecials.map((item) => item.subject),
                                           override,
                                           subjectChoices,
                                       })
                                     : null;
 
+                                const specialSchedule =
+                                    (saturdaySubject && saturdaySubject !== "なし"
+                                        ? resolvedSpecials.find((item) =>
+                                              doesSubjectMatchOption(item.subject, saturdaySubject)
+                                          )?.row
+                                        : undefined) ?? matchingSpecials[0];
+
                                 const isExpandable = Boolean(expansionMap?.[code]);
                                 const currentCourse = saturdaySubject ?? (isExpandable ? (subjectChoices?.[code] ?? code) : code);
 
-                                const courseOverride = (currentCourse || code)
-                                    ? findCourseOverride(dateKey, period, currentCourse, code)
-                                    : undefined;
+                                const courseOverride =
+                                    currentCourse && currentCourse !== "なし"
+                                        ? findCourseOverride(dateKey, period, currentCourse, code)
+                                        : undefined;
 
                                 const effectiveSubject = courseOverride?.new_course ?? currentCourse;
                                 const isChanged = Boolean(override) || Boolean(courseOverride);

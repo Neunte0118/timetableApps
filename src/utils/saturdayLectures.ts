@@ -55,18 +55,30 @@ export function isSaturdayLectureKey(key: string): boolean {
 }
 
 /**
+ * 特別時程などの科目文字列が、土曜講習の選択肢（例: "倫理" に対して "倫理C"）に一致するか判定する
+ */
+export function doesSubjectMatchOption(subjectText: string, option: string): boolean {
+    if (!subjectText || !option || option === "なし") return false;
+    return subjectText.includes(option);
+}
+
+/**
  * 土曜日の時程変更（特別時程や時間割変更）における表示科目を、ユーザーの選択科目を反映して解決する
  */
 export function resolveSaturdaySubject({
     period,
     code,
     specialSchedule,
+    specialSchedules,
+    resolvedSpecialSubjects,
     override,
     subjectChoices,
 }: {
     period: number;
     code: string;
     specialSchedule?: SpecialScheduleRow;
+    specialSchedules?: SpecialScheduleRow[];
+    resolvedSpecialSubjects?: string[];
     override?: TimetableOverrideRow;
     subjectChoices?: Record<string, string>;
 }): string | null {
@@ -74,45 +86,79 @@ export function resolveSaturdaySubject({
     if (!lectureDef) return null;
 
     // ユーザーが選択した科目（"数学D", "数学F", "なし" など）
-    const chosenSubject =
+    const chosenSubject = (
         subjectChoices?.[lectureDef.key] ||
         lectureDef.aliases.map((a) => subjectChoices?.[a]).find(Boolean) ||
-        "";
+        ""
+    ).trim();
 
-    const rawSpecial = specialSchedule?.subject?.trim() ?? "";
-    const rawOverride = override?.subjects?.trim() ?? "";
+    const overrideSubject = override?.subjects?.trim() ?? "";
+    if (override && !overrideSubject) {
+        return null;
+    }
+
+    const specialList = specialSchedules ?? (specialSchedule ? [specialSchedule] : []);
+    const specialCandidates = (
+        resolvedSpecialSubjects && resolvedSpecialSubjects.length > 0
+            ? resolvedSpecialSubjects
+            : specialList.map((s) => s.subject ?? "")
+    )
+        .map((s) => s.trim())
+        .filter(Boolean);
+
     const rawCode = code?.trim() ?? "";
 
-    // 候補となる元の文字列（特別時程 > 時間割変更 > code）
-    const candidate = rawSpecial || rawOverride || rawCode;
-    const hasScheduleChange = Boolean(specialSchedule || override);
+    // 候補となる元の文字列一覧（時間割変更 > 特別時程の全該当行 > code）
+    const candidates = override
+        ? [overrideSubject]
+        : specialCandidates.length > 0
+          ? specialCandidates
+          : rawCode
+            ? [rawCode]
+            : [];
+
+    const hasSpecialSchedule = specialList.length > 0;
+    const hasScheduleChange = Boolean(override || hasSpecialSchedule);
 
     // 1. 直近のエイリアス一致 ("土曜講習①", "土曜講習1" 等)
-    if (lectureDef.aliases.some((alias) => candidate === alias)) {
-        return chosenSubject || candidate;
+    const aliasMatch = candidates.find((c) => lectureDef.aliases.some((alias) => c === alias));
+    if (aliasMatch) {
+        return chosenSubject || "なし";
     }
 
     // 2. 時限番号なしの "土曜講習" または "講習"
-    if (/^(土曜講習|講習)$/.test(candidate)) {
-        return chosenSubject || candidate;
+    const genericMatch = candidates.find((c) => /^(土曜講習|講習)$/.test(c));
+    if (genericMatch) {
+        return chosenSubject || "なし";
     }
 
-    // 3. 選択肢が含まれている場合（例: "数学D, 数学F", "倫理、数学E", "数学D/数学F" 等）
-    const matchedOption = lectureDef.options
-        .filter((opt) => opt !== "なし")
-        .find((opt) => candidate.includes(opt));
-    if (matchedOption) {
-        if (chosenSubject) {
-            return chosenSubject;
+    // 3. 具体的な講習科目が含まれている場合（例: "数学D", "数学F", "倫理C", "数学E", "数学D, 数学F" 等）
+    const nonNoneOptions = lectureDef.options.filter((opt) => opt !== "なし");
+    const hasExplicitOption = candidates.some((c) =>
+        nonNoneOptions.some((opt) => doesSubjectMatchOption(c, opt))
+    );
+    if (hasExplicitOption) {
+        if (!chosenSubject || chosenSubject === "なし") {
+            return "なし";
         }
-        return candidate;
+        // 選択した科目がその日に実際に開講されている場合のみ表示する
+        const isChosenHeldToday = candidates.some((c) =>
+            doesSubjectMatchOption(c, chosenSubject)
+        );
+        return isChosenHeldToday ? chosenSubject : "なし";
     }
 
     // 4. 土曜日に特別時程または時間割変更（時程変更）が存在し、該当の時限（1〜4限）である場合
     if (hasScheduleChange) {
+        const firstCandidate = candidates[0] ?? "";
         // 特別時程で時間が設定されている場合や、講習表記がある場合
-        if (!candidate || candidate === "-" || candidate.includes("講習") || candidate.includes("時程")) {
-            return chosenSubject || (candidate || lectureDef.key);
+        if (
+            !firstCandidate ||
+            firstCandidate === "-" ||
+            firstCandidate.includes("講習") ||
+            firstCandidate.includes("時程")
+        ) {
+            return chosenSubject || "なし";
         }
     }
 
